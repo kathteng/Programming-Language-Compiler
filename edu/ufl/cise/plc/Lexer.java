@@ -1,7 +1,7 @@
 package edu.ufl.cise.plc;
 
 public class Lexer implements ILexer {
-    private enum State {START, IDENT, INT_LIT, FLOAT_LIT, STRING_LIT, HAVE_EQ, HAVE_GT, HAVE_LT, HAVE_MINUS, HAVE_PLUS, HAVE_EX};
+    private enum State {START, IDENT, INT_LIT, FLOAT_LIT, STRING_LIT, HAVE_EQ, HAVE_GT, HAVE_LT, HAVE_MINUS, HAVE_EX, HAVE_ZERO};
     State state;
     private char chars[];
     private int line = 0;
@@ -20,9 +20,31 @@ public class Lexer implements ILexer {
             switch (state){
                 case START:
                     switch(ch){
-                        case '=':
+                        case '=' -> {
+                            ss = ss.concat("=");
                             state = State.HAVE_EQ;
                             col++;
+                        }
+                        case '>' -> {
+                            ss = ss.concat(">");
+                            state = State.HAVE_GT;
+                            col++;
+                        }
+                        case '<' -> {
+                            ss = ss.concat("<");
+                            state = State.HAVE_LT;
+                            col++;
+                        }
+                        case '-' -> {
+                            ss = ss.concat("-");
+                            state = State.HAVE_MINUS;
+                            col++;
+                        }
+                        case '!' -> {
+                            ss = ss.concat("!");
+                            state = State.HAVE_EX;
+                            col++;
+                        }
                     }
                 case IDENT:
                 case INT_LIT:
@@ -30,18 +52,101 @@ public class Lexer implements ILexer {
                 case STRING_LIT:
                 case HAVE_EQ:
                     switch(ch){
-                        case '=':
+                        case '=' -> {
                             ss = ss.concat("=");
                             Token t = new Token(line,tokencol,ss);
                             t.kind = Token.Kind.EQUALS;
                             col++;
                             return t;
+                        }
+                        default -> {
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.ASSIGN;
+                            return t;
+                        }
                     }
                 case HAVE_GT:
+                    switch(ch){
+                        case '>' -> {
+                            ss = ss.concat(">");
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.RANGLE;
+                            col++;
+                            return t;
+                        }
+                        case '=' -> {
+                            ss = ss.concat("=");
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.GE;
+                            col++;
+                            return t;
+                        }
+                        default -> {
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.GT;
+                            return t;
+                        }
+                    }
                 case HAVE_LT:
+                    switch(ch){
+                        case '<' -> {
+                            ss = ss.concat("<");
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.LANGLE;
+                            col++;
+                            return t;
+                        }
+                        case '=' -> {
+                            ss = ss.concat("=");
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.LE;
+                            col++;
+                            return t;
+                        }
+                        case '-' -> {
+                            ss = ss.concat("-");
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.LARROW;
+                            col++;
+                            return t;
+                        }
+                        default -> {
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.LT;
+                            return t;
+                        }
+                    }
                 case HAVE_MINUS:
-                case HAVE_PLUS:
+                    switch(ch){
+                        case '>' -> {
+                            ss = ss.concat(">");
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.RARROW;
+                            col++;
+                            return t;
+                        }
+                        default -> {
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.MINUS;
+                            return t;
+                        }
+                    }
                 case HAVE_EX:
+                    switch(ch){
+                        case '=' -> {
+                            ss = ss.concat("=");
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.NOT_EQUALS;
+                            col++;
+                            return t;
+                        }
+                        default -> {
+                            Token t = new Token(line,tokencol,ss);
+                            t.kind = Token.Kind.BANG;
+                            return t;
+                        }
+                    }
+                case HAVE_ZERO:
             }
         }
     }
