@@ -2,39 +2,51 @@ package edu.ufl.cise.plc;
 
 public class Token implements IToken {
 
+    public Kind kind;
+    SourceLocation s;
+    String str;
+    
+    public Token(Kind k, int l, int c, String ss){
+        kind = k;
+        s = new SourceLocation(l,c);
+        str = ss;
+    }
 
     @Override
     public Kind getKind() {
-        return null;
+        return kind;
     }
 
     @Override
     public String getText() {
-        return null;
+        return str;
     }
 
     @Override
     public SourceLocation getSourceLocation() {
-        return null;
+        return s;
     }
 
     @Override
     public int getIntValue() {
-        return 0;
+        return Integer.parseInt(str);
     }
 
     @Override
     public float getFloatValue() {
-        return 0;
+        return Float.parseFloat(str);
     }
 
     @Override
     public boolean getBooleanValue() {
-        return false;
+        if (str.equals("true"))
+            return true;
+        else
+            return false;
     }
 
     @Override
     public String getStringValue() {
-        return null;
+        return str;
     }
 }
