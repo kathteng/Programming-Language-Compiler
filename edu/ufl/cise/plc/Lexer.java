@@ -12,7 +12,7 @@ public class Lexer implements ILexer {
     }
     @Override
     public IToken next() throws LexicalException {
-        String ss;
+        String ss = "";
         int tokencol = col;
         state = State.START;
         while (true){
@@ -20,7 +20,9 @@ public class Lexer implements ILexer {
             switch (state){
                 case START:
                     switch(ch){
-                        
+                        case '=':
+                            state = State.HAVE_EQ;
+                            col++;
                     }
                 case IDENT:
                 case INT_LIT:
@@ -32,6 +34,7 @@ public class Lexer implements ILexer {
                             ss = ss.concat("=");
                             Token t = new Token(line,tokencol,ss);
                             t.kind = Token.Kind.EQUALS;
+                            col++;
                             return t;
                     }
                 case HAVE_GT:
@@ -40,7 +43,6 @@ public class Lexer implements ILexer {
                 case HAVE_PLUS:
                 case HAVE_EX:
             }
-            pos++;
         }
     }
 
