@@ -6,8 +6,7 @@ public class Token implements IToken {
     SourceLocation s;
     String str;
     
-    public Token(Kind k, int l, int c, String ss){
-        kind = k;
+    public Token(int l, int c, String ss){
         s = new SourceLocation(l,c);
         str = ss;
     }
