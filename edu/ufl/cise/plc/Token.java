@@ -2,11 +2,12 @@ package edu.ufl.cise.plc;
 
 public class Token implements IToken {
 
-    public Kind kind;
-    SourceLocation s;
-    String str;
+    private final Kind kind;
+    private SourceLocation s;
+    private String str;
     
-    public Token(int l, int c, String ss){
+    public Token(Kind k, int l, int c, String ss){
+        kind = k;
         s = new SourceLocation(l,c);
         str = ss;
     }
