@@ -5,12 +5,13 @@ import java.util.Map;
 
 public class Lexer implements ILexer {
     private enum State {
-        START, IN_IDENT, IN_COMMENT, HAVE_ZERO, HAVE_DOT, IN_FLOAT, IN_NUM, HAVE_EQ, HAVE_MINUS, HAVE_LT, HAVE_GT, HAVE_EX};
+        START, IN_IDENT, IN_COMMENT, IN_STRING, HAVE_ZERO, HAVE_DOT, IN_FLOAT, IN_NUM, HAVE_EQ, HAVE_MINUS, HAVE_LT, HAVE_GT, HAVE_EX}
 
     private final Map<String, IToken.Kind> reserved = new HashMap<String, IToken.Kind>();
 
     private State state;
-    private char chars[];
+    private char[] chars;
+    private int pos = 0;
     private int line = 0;
     private int col = 0;
 
@@ -54,261 +55,375 @@ public class Lexer implements ILexer {
         reserved.put("void", IToken.Kind.KW_VOID);
     }
     public Lexer(String input) {
-        chars = new char[input.length()];
+        chars = input.toCharArray();
         initMap();
     }
     @Override
     public IToken next() throws LexicalException {
         String ss = "";
         state = State.START;
-        while (col < chars.length) {
-            char ch = chars[col];
+        if (chars.length == 0)
+            return new Token(IToken.Kind.EOF, 0, 0, "");
+
+        while (pos < chars.length) {
+            char ch = chars[pos];
             switch (state){
-                case START:
+                case START -> {
                     if (Character.isJavaIdentifierStart(ch)) {
                         ss = ss.concat(String.valueOf(ch));
-                        col++;
+                        pos++;
                         state = State.IN_IDENT;
-                    }
-                    else {
-                        switch(ch){
-                            case ' ', '\r', '\t', '\n' -> {
-                                col++;
+                    } else {
+                        switch (ch) {
+                            case '0' -> {
+                                ss = ss.concat(String.valueOf(ch));
+                                pos++;
+                                state = State.HAVE_ZERO;
+                            }
+                            case '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
+                                ss = ss.concat(String.valueOf(ch));
+                                pos++;
+                                state = State.IN_NUM;
+                            }
+                            case ' ', '\t' -> {
+                                pos++;
                                 state = State.START;
+                            }
+                            case '\r', '\n' -> {
+                                pos++;
+                                col = 0;
+                                line++;
+                                state = State.START;
+                            }
+                            case '"' -> {
+                                pos++;
+                                state = State.IN_STRING;
                             }
                             case '#' -> {
                                 ss = ss.concat("#");
                                 state = State.IN_COMMENT;
-                                col++;
+                                pos++;
                             }
                             case '=' -> {
                                 ss = ss.concat("=");
                                 state = State.HAVE_EQ;
-                                col++;
+                                pos++;
                             }
                             case '>' -> {
                                 ss = ss.concat(">");
                                 state = State.HAVE_GT;
-                                col++;
+                                pos++;
                             }
                             case '<' -> {
                                 ss = ss.concat("<");
                                 state = State.HAVE_LT;
-                                col++;
+                                pos++;
                             }
                             case '-' -> {
                                 ss = ss.concat("-");
                                 state = State.HAVE_MINUS;
-                                col++;
+                                pos++;
                             }
                             case '!' -> {
                                 ss = ss.concat("!");
                                 state = State.HAVE_EX;
-                                col++;
+                                pos++;
                             }
                             case '|' -> {
                                 ss = ss.concat("|");
+                                pos++;
+                                Token t = new Token(IToken.Kind.OR, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.OR, line,col,ss);
+                                return t;
                             }
                             case '&' -> {
                                 ss = ss.concat("&");
+                                pos++;
+                                Token t = new Token(IToken.Kind.AND, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.AND, line,col,ss);
+                                return t;
                             }
                             case '(' -> {
                                 ss = ss.concat("(");
+                                pos++;
+                                Token t = new Token(IToken.Kind.LPAREN, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.LPAREN, line,col,ss);
+                                return t;
                             }
                             case ')' -> {
                                 ss = ss.concat(")");
+                                pos++;
+                                Token t = new Token(IToken.Kind.RPAREN, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.RPAREN, line,col,ss);
+                                return t;
                             }
                             case '[' -> {
                                 ss = ss.concat("[");
+                                pos++;
+                                Token t = new Token(IToken.Kind.LSQUARE, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.LSQUARE, line,col,ss);
+                                return t;
                             }
                             case ']' -> {
                                 ss = ss.concat("]");
+                                pos++;
+                                Token t = new Token(IToken.Kind.RSQUARE, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.RSQUARE, line,col,ss);
+                                return t;
                             }
                             case '+' -> {
                                 ss = ss.concat("+");
+                                pos++;
+                                Token t = new Token(IToken.Kind.PLUS, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.PLUS, line,col,ss);
+                                return t;
                             }
                             case '*' -> {
                                 ss = ss.concat("*");
+                                pos++;
+                                Token t = new Token(IToken.Kind.TIMES, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.TIMES, line,col,ss);
+                                return t;
                             }
                             case '/' -> {
                                 ss = ss.concat("/");
+                                pos++;
+                                Token t = new Token(IToken.Kind.DIV, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.DIV, line,col,ss);
+                                return t;
                             }
                             case '%' -> {
                                 ss = ss.concat("%");
+                                pos++;
+                                Token t = new Token(IToken.Kind.MOD, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.MOD, line,col,ss);
+                                return t;
                             }
                             case ';' -> {
                                 ss = ss.concat(";");
+                                pos++;
+                                Token t = new Token(IToken.Kind.SEMI, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.SEMI, line,col,ss);
+                                return t;
                             }
                             case ',' -> {
                                 ss = ss.concat(",");
+                                pos++;
+                                Token t = new Token(IToken.Kind.COMMA, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.COMMA, line,col,ss);
+                                return t;
                             }
                             case '^' -> {
                                 ss = ss.concat("^");
+                                pos++;
+                                Token t = new Token(IToken.Kind.RETURN, line, col, ss);
                                 col++;
-                                return new Token(IToken.Kind.RETURN, line,col,ss);
+                                return t;
                             }
+                            default -> throw new LexicalException("Invalid char");
                         }
                     }
-                case IN_IDENT:
+                }
+                case IN_IDENT -> {
                     if (Character.isJavaIdentifierPart(ch)) {
                         ss = ss.concat(String.valueOf(ch));
-                        col++;
-                    }
-                    else {
-                        col++;
-                        if (reserved.containsKey(ss))
-                            return new Token(reserved.get(ss), line, col, ss);
-                        else
-                            return new Token(IToken.Kind.IDENT, line, col, ss);
-                    }
-                case IN_COMMENT:
-                    switch (ch) {
-                        case '\r', '\n' -> {
+                        pos++;
+                    } else {
+                        pos++;
+                        if (reserved.containsKey(ss)) {
+                            Token t = new Token(reserved.get(ss), line, col, ss);
                             col++;
-                            state = State.START;
-                        }
-                        default -> col++;
-                    }
-                case IN_NUM:
-                    if (Character.isDigit(ch)) {
-                        ss = ss.concat(String.valueOf(ch));
-                        col++;
-                    }
-                    else {
-                        col++;
-                        return new Token(IToken.Kind.INT_LIT, line,col,ss);
-                    }
-                case IN_FLOAT:
-                    if (Character.isDigit(ch)) {
-                        ss = ss.concat(String.valueOf(ch));
-                        col++;
-                    }
-                    else {
-                        col++;
-                        return new Token(IToken.Kind.FLOAT_LIT, line,col,ss);
-                    }
-                case HAVE_DOT:
-                    if (Character.isDigit(ch)) {
-                        ss = ss.concat(String.valueOf(ch));
-                        col++;
-                        state = State.IN_FLOAT;
-                    }
-                    else {
-                        // throw error (?)
-                        throw new LexicalException("");
-                    }
-                case HAVE_EQ:
-                    switch(ch){
-                        case '=' -> {
-                            ss = ss.concat("=");
+                            return t;
+                        } else {
+                            Token t = new Token(IToken.Kind.IDENT, line, col, ss);
                             col++;
-                            return new Token(IToken.Kind.EQUALS, line,col,ss);
-                        }
-                        default -> {
-                            col++;
-                            return new Token(IToken.Kind.ASSIGN, line,col,ss);
-                        }
-                    }
-                case HAVE_GT:
-                    switch(ch){
-                        case '>' -> {
-                            ss = ss.concat(">");
-                            col++;
-                            return new Token(IToken.Kind.RANGLE, line,col,ss);
-                        }
-                        case '=' -> {
-                            ss = ss.concat("=");
-                            col++;
-                            return new Token(IToken.Kind.GE, line,col,ss);
-                        }
-                        default -> {
-                            col++;
-                            return new Token(IToken.Kind.GT, line,col,ss);
-                        }
-                    }
-                case HAVE_LT:
-                    switch(ch){
-                        case '<' -> {
-                            ss = ss.concat("<");
-                            col++;
-                            return new Token(IToken.Kind.LANGLE, line,col,ss);
-                        }
-                        case '=' -> {
-                            ss = ss.concat("=");
-                            col++;
-                            return new Token(IToken.Kind.LE, line,col,ss);
-                        }
-                        case '-' -> {
-                            ss = ss.concat("-");
-                            col++;
-                            return new Token(IToken.Kind.LARROW, line,col,ss);
-                        }
-                        default -> {
-                            col++;
-                            return new Token(IToken.Kind.LT, line,col,ss);
-                        }
-                    }
-                case HAVE_MINUS:
-                    switch(ch){
-                        case '>' -> {
-                            ss = ss.concat(">");
-                            col++;
-                            return new Token(IToken.Kind.RARROW, line,col,ss);
-                        }
-                        default -> {
-                            col++;
-                            return new Token(IToken.Kind.MINUS, line,col,ss);
-                        }
-                    }
-                case HAVE_EX:
-                    switch(ch){
-                        case '=' -> {
-                            ss = ss.concat("=");
-                            col++;
-                            return new Token(IToken.Kind.NOT_EQUALS, line,col,ss);
-                        }
-                        default -> {
-                            Token t = new Token(IToken.Kind.BANG, line,col,ss);
                             return t;
                         }
                     }
-                case HAVE_ZERO:
+                }
+                case IN_COMMENT -> {
+                    switch (ch) {
+                        case '\r', '\n' -> {
+                            pos++;
+                            line = 0;
+                            col = 0;
+                            state = State.START;
+                        }
+                        default -> {
+                            pos++;
+                            col++;
+                        }
+                    }
+                }
+                case IN_STRING -> {
+                    switch (ch) {
+                        case '"' -> {
+                            ss.concat("\"");
+                            pos++;
+                            Token t = new Token(IToken.Kind.STRING_LIT, line, col, ss);
+                        }
+                        default -> {
+                            pos++;
+                            ss.concat(String.valueOf(ch));
+                        }
+                    }
+                }
+                case IN_NUM -> {
+                    if (Character.isDigit(ch)) {
+                        ss = ss.concat(String.valueOf(ch));
+                        pos++;
+                    } else {
+                        pos++;
+                        Token t = new Token(IToken.Kind.INT_LIT, line, col, ss);
+                        col++;
+                        return t;
+                    }
+                }
+                case IN_FLOAT -> {
+                    if (Character.isDigit(ch)) {
+                        ss = ss.concat(String.valueOf(ch));
+                        pos++;
+                        col++;
+                    } else {
+                        pos++;
+                        Token t = new Token(IToken.Kind.FLOAT_LIT, line, col, ss);
+                        col++;
+                        return t;
+                    }
+                }
+                case HAVE_DOT -> {
+                    if (Character.isDigit(ch)) {
+                        ss = ss.concat(String.valueOf(ch));
+                        pos++;
+                        col++;
+                        state = State.IN_FLOAT;
+                    } else {
+                        // throw error (?)
+                        throw new LexicalException("");
+                    }
+                }
+                case HAVE_EQ -> {
+                    switch (ch) {
+                        case '=' -> {
+                            ss = ss.concat("=");
+                            pos++;
+                            Token t = new Token(IToken.Kind.EQUALS, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                        default -> {
+                            pos++;
+                            Token t = new Token(IToken.Kind.ASSIGN, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                    }
+                }
+                case HAVE_GT -> {
+                    switch (ch) {
+                        case '>' -> {
+                            ss = ss.concat(">");
+                            pos++;
+                            Token t = new Token(IToken.Kind.RANGLE, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                        case '=' -> {
+                            ss = ss.concat("=");
+                            pos++;
+                            Token t = new Token(IToken.Kind.GE, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                        default -> {
+                            pos++;
+                            Token t = new Token(IToken.Kind.GT, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                    }
+                }
+                case HAVE_LT -> {
+                    switch (ch) {
+                        case '<' -> {
+                            ss = ss.concat("<");
+                            pos++;
+                            Token t = new Token(IToken.Kind.LANGLE, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                        case '=' -> {
+                            ss = ss.concat("=");
+                            pos++;
+                            Token t = new Token(IToken.Kind.LE, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                        case '-' -> {
+                            ss = ss.concat("-");
+                            pos++;
+                            Token t = new Token(IToken.Kind.LARROW, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                        default -> {
+                            pos++;
+                            Token t = new Token(IToken.Kind.LT, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                    }
+                }
+                case HAVE_MINUS -> {
+                    switch (ch) {
+                        case '>' -> {
+                            ss = ss.concat(">");
+                            pos++;
+                            Token t = new Token(IToken.Kind.RARROW, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                        default -> {
+                            pos++;
+                            Token t = new Token(IToken.Kind.MINUS, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                    }
+                }
+                case HAVE_EX -> {
+                    switch (ch) {
+                        case '=' -> {
+                            ss = ss.concat("=");
+                            pos++;
+                            Token t = new Token(IToken.Kind.NOT_EQUALS, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                        default -> {
+                            Token t = new Token(IToken.Kind.BANG, line, col, ss);
+                            col++;
+                            return t;
+                        }
+                    }
+                }
+                case HAVE_ZERO -> {
                     if (ch == '.') {
                         ss = ss.concat(".");
+                        pos++;
                         col++;
                         state = State.HAVE_DOT;
-                    }
-                    else {
+                    } else {
+                        pos++;
+                        Token t = new Token(IToken.Kind.INT_LIT, line, col, ss);
                         col++;
-                        return new Token(IToken.Kind.INT_LIT, line,col,ss);
+                        return t;
                     }
+                }
+                default -> throw new LexicalException("Lexer bug");
             }
         }
-        return null;
+        return new Token(IToken.Kind.EOF, line, col, "");
     }
 
     @Override
