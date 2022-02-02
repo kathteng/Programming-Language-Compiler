@@ -5,15 +5,16 @@ import java.util.Map;
 
 public class Lexer implements ILexer {
     private enum State {
-        START, IN_IDENT, IN_COMMENT, IN_STRING, HAVE_ZERO, HAVE_DOT, IN_FLOAT, IN_NUM, HAVE_EQ, HAVE_MINUS, HAVE_LT, HAVE_GT, HAVE_EX}
+        START, IN_IDENT, IN_COMMENT, IN_STRING, HAVE_ZERO, HAVE_DOT, IN_FLOAT, IN_NUM,
+        HAVE_EQ, HAVE_MINUS, HAVE_LT, HAVE_GT, HAVE_EX, HAVE_BSLASH}
 
     private final Map<String, IToken.Kind> reserved = new HashMap<String, IToken.Kind>();
 
     private State state;
     private char[] chars;
-    private int pos = 0;
-    private int line = 0;
-    private int col = 0;
+    private int pos = 0; // position in input aka the index of chars[]
+    private int line = 0; // first char of token position
+    private int col = 0; // where the token starts
 
     private void initMap() {
         reserved.put("string", IToken.Kind.TYPE);
@@ -60,6 +61,7 @@ public class Lexer implements ILexer {
     }
     @Override
     public IToken next() throws LexicalException {
+        int tokenLength = 0; // to keep track where next token starts
         String ss = "";
         state = State.START;
         if (chars.length == 0)
@@ -72,21 +74,25 @@ public class Lexer implements ILexer {
                     if (Character.isJavaIdentifierStart(ch)) {
                         ss = ss.concat(String.valueOf(ch));
                         pos++;
+                        tokenLength++;
                         state = State.IN_IDENT;
                     } else {
                         switch (ch) {
                             case '0' -> {
                                 ss = ss.concat(String.valueOf(ch));
                                 pos++;
+                                tokenLength++;
                                 state = State.HAVE_ZERO;
                             }
                             case '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                                 ss = ss.concat(String.valueOf(ch));
                                 pos++;
+                                tokenLength++;
                                 state = State.IN_NUM;
                             }
                             case ' ', '\t' -> {
                                 pos++;
+                                col++;
                                 state = State.START;
                             }
                             case '\r', '\n' -> {
@@ -96,7 +102,9 @@ public class Lexer implements ILexer {
                                 state = State.START;
                             }
                             case '"' -> {
+                                ss += '"';
                                 pos++;
+                                tokenLength++;
                                 state = State.IN_STRING;
                             }
                             case '#' -> {
@@ -108,119 +116,124 @@ public class Lexer implements ILexer {
                                 ss = ss.concat("=");
                                 state = State.HAVE_EQ;
                                 pos++;
+                                tokenLength++;
                             }
                             case '>' -> {
                                 ss = ss.concat(">");
                                 state = State.HAVE_GT;
                                 pos++;
+                                tokenLength++;
                             }
                             case '<' -> {
                                 ss = ss.concat("<");
                                 state = State.HAVE_LT;
                                 pos++;
+                                tokenLength++;
                             }
                             case '-' -> {
                                 ss = ss.concat("-");
                                 state = State.HAVE_MINUS;
                                 pos++;
+                                tokenLength++;
                             }
                             case '!' -> {
                                 ss = ss.concat("!");
                                 state = State.HAVE_EX;
                                 pos++;
+                                tokenLength++;
                             }
                             case '|' -> {
                                 ss = ss.concat("|");
                                 pos++;
                                 Token t = new Token(IToken.Kind.OR, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case '&' -> {
                                 ss = ss.concat("&");
                                 pos++;
                                 Token t = new Token(IToken.Kind.AND, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case '(' -> {
                                 ss = ss.concat("(");
                                 pos++;
                                 Token t = new Token(IToken.Kind.LPAREN, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case ')' -> {
                                 ss = ss.concat(")");
                                 pos++;
                                 Token t = new Token(IToken.Kind.RPAREN, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case '[' -> {
                                 ss = ss.concat("[");
                                 pos++;
                                 Token t = new Token(IToken.Kind.LSQUARE, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case ']' -> {
                                 ss = ss.concat("]");
                                 pos++;
                                 Token t = new Token(IToken.Kind.RSQUARE, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case '+' -> {
                                 ss = ss.concat("+");
                                 pos++;
                                 Token t = new Token(IToken.Kind.PLUS, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case '*' -> {
                                 ss = ss.concat("*");
                                 pos++;
                                 Token t = new Token(IToken.Kind.TIMES, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case '/' -> {
                                 ss = ss.concat("/");
                                 pos++;
                                 Token t = new Token(IToken.Kind.DIV, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case '%' -> {
                                 ss = ss.concat("%");
                                 pos++;
                                 Token t = new Token(IToken.Kind.MOD, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case ';' -> {
                                 ss = ss.concat(";");
                                 pos++;
                                 Token t = new Token(IToken.Kind.SEMI, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case ',' -> {
                                 ss = ss.concat(",");
                                 pos++;
                                 Token t = new Token(IToken.Kind.COMMA, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
                             case '^' -> {
                                 ss = ss.concat("^");
                                 pos++;
                                 Token t = new Token(IToken.Kind.RETURN, line, col, ss);
-                                col++;
+                                col += tokenLength + 1;
                                 return t;
                             }
-                            default -> throw new LexicalException("Invalid char");
+                            default -> throw new LexicalException("Invalid char", line, col);
                         }
                     }
                 }
@@ -228,15 +241,15 @@ public class Lexer implements ILexer {
                     if (Character.isJavaIdentifierPart(ch)) {
                         ss = ss.concat(String.valueOf(ch));
                         pos++;
+                        tokenLength++;
                     } else {
-                        pos++;
-                        if (reserved.containsKey(ss)) {
+                        if (reserved.containsKey(ss)) { // if it's a reserved word
                             Token t = new Token(reserved.get(ss), line, col, ss);
-                            col++;
+                            col += tokenLength;
                             return t;
                         } else {
                             Token t = new Token(IToken.Kind.IDENT, line, col, ss);
-                            col++;
+                            col += tokenLength;
                             return t;
                         }
                     }
@@ -245,8 +258,9 @@ public class Lexer implements ILexer {
                     switch (ch) {
                         case '\r', '\n' -> {
                             pos++;
-                            line = 0;
+                            line++;
                             col = 0;
+                            tokenLength = 0;
                             state = State.START;
                         }
                         default -> {
@@ -257,25 +271,93 @@ public class Lexer implements ILexer {
                 }
                 case IN_STRING -> {
                     switch (ch) {
-                        case '"' -> {
-                            ss.concat("\"");
+                        case '\\' -> {
+                            pos++;
+                            tokenLength++;
+                            state = State.HAVE_BSLASH;
+                        }
+                        case '"' -> { // end of string_lit
+                            ss += '\"';
                             pos++;
                             Token t = new Token(IToken.Kind.STRING_LIT, line, col, ss);
+                            col += tokenLength + 1;
+                            return t;
                         }
                         default -> {
                             pos++;
-                            ss.concat(String.valueOf(ch));
+                            tokenLength++;
+                            ss += ch;
                         }
+                    }
+                }
+                // still in string_lit, check what's after '\'
+                // if valid escape sequence, go back to IN_STRING
+                case HAVE_BSLASH -> {
+                    switch (ch) {
+                        case 'b' -> {
+                            ss += '\b';
+                            pos++;
+                            tokenLength++;
+                            state = State.IN_STRING;
+                        }
+                        case 't' -> {
+                            ss += '\t';
+                            pos++;
+                            tokenLength++;
+                            state = State.IN_STRING;
+                        }
+                        case 'n' -> {
+                            ss += '\n';
+                            pos++;
+                            tokenLength++;
+                            state = State.IN_STRING;
+                        }
+                        case 'f' -> {
+                            ss += '\f';
+                            pos++;
+                            tokenLength++;
+                            state = State.IN_STRING;
+                        }
+                        case 'r' -> {
+                            ss += '\r';
+                            pos++;
+                            tokenLength++;
+                            state = State.IN_STRING;
+                        }
+                        case '"' -> {
+                            ss += '"';
+                            pos++;
+                            tokenLength++;
+                            state = State.IN_STRING;
+                        }
+                        case '\'' -> {
+                            ss += '\'';
+                            pos++;
+                            tokenLength++;
+                            state = State.IN_STRING;
+                        }
+                        case '\\' -> {
+                            ss += '\\';
+                            pos++;
+                            tokenLength++;
+                            state = State.IN_STRING;
+                        }
+                        default -> throw new LexicalException("Unresolved escape sequence");
                     }
                 }
                 case IN_NUM -> {
                     if (Character.isDigit(ch)) {
                         ss = ss.concat(String.valueOf(ch));
                         pos++;
+                        tokenLength++;
                     } else {
-                        pos++;
+                        try {
+                            Integer.parseInt(ss);
+                        } catch (NumberFormatException e) {
+                            throw new LexicalException("Integer too large");
+                        }
                         Token t = new Token(IToken.Kind.INT_LIT, line, col, ss);
-                        col++;
+                        col += tokenLength;
                         return t;
                     }
                 }
@@ -283,11 +365,15 @@ public class Lexer implements ILexer {
                     if (Character.isDigit(ch)) {
                         ss = ss.concat(String.valueOf(ch));
                         pos++;
-                        col++;
+                        tokenLength++;
                     } else {
-                        pos++;
+                        try {
+                            Float.parseFloat(ss);
+                        } catch (NumberFormatException e) {
+                            throw new LexicalException("Float too large");
+                        }
                         Token t = new Token(IToken.Kind.FLOAT_LIT, line, col, ss);
-                        col++;
+                        col += tokenLength;
                         return t;
                     }
                 }
@@ -295,11 +381,11 @@ public class Lexer implements ILexer {
                     if (Character.isDigit(ch)) {
                         ss = ss.concat(String.valueOf(ch));
                         pos++;
-                        col++;
+                        tokenLength++;
                         state = State.IN_FLOAT;
                     } else {
                         // throw error (?)
-                        throw new LexicalException("");
+                        throw new LexicalException("Invalid Token", line, col);
                     }
                 }
                 case HAVE_EQ -> {
@@ -308,13 +394,12 @@ public class Lexer implements ILexer {
                             ss = ss.concat("=");
                             pos++;
                             Token t = new Token(IToken.Kind.EQUALS, line, col, ss);
-                            col++;
+                            col += tokenLength + 1;
                             return t;
                         }
                         default -> {
-                            pos++;
                             Token t = new Token(IToken.Kind.ASSIGN, line, col, ss);
-                            col++;
+                            col += tokenLength;
                             return t;
                         }
                     }
@@ -325,20 +410,19 @@ public class Lexer implements ILexer {
                             ss = ss.concat(">");
                             pos++;
                             Token t = new Token(IToken.Kind.RANGLE, line, col, ss);
-                            col++;
+                            col += tokenLength + 1;
                             return t;
                         }
                         case '=' -> {
                             ss = ss.concat("=");
                             pos++;
                             Token t = new Token(IToken.Kind.GE, line, col, ss);
-                            col++;
+                            col += tokenLength + 1;
                             return t;
                         }
                         default -> {
-                            pos++;
                             Token t = new Token(IToken.Kind.GT, line, col, ss);
-                            col++;
+                            col += tokenLength;
                             return t;
                         }
                     }
@@ -349,27 +433,26 @@ public class Lexer implements ILexer {
                             ss = ss.concat("<");
                             pos++;
                             Token t = new Token(IToken.Kind.LANGLE, line, col, ss);
-                            col++;
+                            col += tokenLength + 1;
                             return t;
                         }
                         case '=' -> {
                             ss = ss.concat("=");
                             pos++;
                             Token t = new Token(IToken.Kind.LE, line, col, ss);
-                            col++;
+                            col += tokenLength + 1;
                             return t;
                         }
                         case '-' -> {
                             ss = ss.concat("-");
                             pos++;
                             Token t = new Token(IToken.Kind.LARROW, line, col, ss);
-                            col++;
+                            col += tokenLength + 1;
                             return t;
                         }
                         default -> {
-                            pos++;
                             Token t = new Token(IToken.Kind.LT, line, col, ss);
-                            col++;
+                            col += tokenLength;
                             return t;
                         }
                     }
@@ -380,13 +463,12 @@ public class Lexer implements ILexer {
                             ss = ss.concat(">");
                             pos++;
                             Token t = new Token(IToken.Kind.RARROW, line, col, ss);
-                            col++;
+                            col += tokenLength + 1;
                             return t;
                         }
                         default -> {
-                            pos++;
                             Token t = new Token(IToken.Kind.MINUS, line, col, ss);
-                            col++;
+                            col += tokenLength;
                             return t;
                         }
                     }
@@ -397,12 +479,12 @@ public class Lexer implements ILexer {
                             ss = ss.concat("=");
                             pos++;
                             Token t = new Token(IToken.Kind.NOT_EQUALS, line, col, ss);
-                            col++;
+                            col += tokenLength + 1;
                             return t;
                         }
                         default -> {
                             Token t = new Token(IToken.Kind.BANG, line, col, ss);
-                            col++;
+                            col += tokenLength;
                             return t;
                         }
                     }
@@ -411,12 +493,11 @@ public class Lexer implements ILexer {
                     if (ch == '.') {
                         ss = ss.concat(".");
                         pos++;
-                        col++;
+                        tokenLength++;
                         state = State.HAVE_DOT;
                     } else {
-                        pos++;
                         Token t = new Token(IToken.Kind.INT_LIT, line, col, ss);
-                        col++;
+                        col += tokenLength;
                         return t;
                     }
                 }
