@@ -21,6 +21,12 @@ public class Token implements IToken {
     public String getText() {
         StringBuilder strText = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
+            if (i == 0 || i == str.length() - 1) {
+                if (str.charAt(i) == '\"') {
+                    strText.append('"');
+                    continue;
+                }
+            }
             switch (str.charAt(i)) {
                 case '\b' -> {
                     strText.append("\\b");
@@ -38,7 +44,7 @@ public class Token implements IToken {
                     strText.append("\\r");
                 }
                 case '\"' -> {
-                    strText.append('"');
+                    strText.append("\\\"");
                 }
                 case '\'' -> {
                     strText.append("\\'");
@@ -76,10 +82,8 @@ public class Token implements IToken {
     @Override
     public String getStringValue() {
         StringBuilder strVal = new StringBuilder(str);
-        for (int i = 0; i < strVal.length(); i++) {
-            if (strVal.charAt(i) == '"')
-                strVal.deleteCharAt(i);
-        }
+        strVal.deleteCharAt(0);
+        strVal.deleteCharAt(strVal.length() - 1);
         return strVal.toString();
     }
 }
