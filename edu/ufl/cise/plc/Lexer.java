@@ -509,6 +509,13 @@ public class Lexer implements ILexer {
 
     @Override
     public IToken peek() throws LexicalException {
-        return null;
+        int pos_ = pos;
+        int col_ = col;
+        int line_ = line;
+        IToken a = next();
+        pos = pos_;
+        col = col_;
+        line = line_;
+        return a;
     }
 }

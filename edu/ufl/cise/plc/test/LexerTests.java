@@ -232,4 +232,21 @@ public class LexerTests {
 		show("expectedTextChars="+getASCII(expectedText));
 		assertEquals(expectedText,text);
 	}
+
+	@Test
+	void testComment1() throws LexicalException {
+		//Note that the quotes around "This is a string" are passed to the lexer.  
+		String input = """
+				"This is a string"
+				#this is a comment
+				*
+				""";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.peek(), Kind.STRING_LIT, 0,0);
+		checkToken(lexer.next(), Kind.STRING_LIT, 0,0);
+		checkToken(lexer.peek(), Kind.TIMES, 2,0);
+		checkToken(lexer.next(), Kind.TIMES, 2,0);
+		checkEOF(lexer.next());
+	}
 }
