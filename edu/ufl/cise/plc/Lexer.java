@@ -233,7 +233,9 @@ public class Lexer implements ILexer {
                                 col += tokenLength + 1;
                                 return t;
                             }
-                            default -> throw new LexicalException("Invalid char", line, col);
+                            default -> {
+                                throw new LexicalException("Invalid char");
+                            }
                         }
                     }
                 }
@@ -284,9 +286,13 @@ public class Lexer implements ILexer {
                             return t;
                         }
                         default -> {
-                            pos++;
-                            tokenLength++;
-                            ss += ch;
+                            if (pos == chars.length - 1 && ch != '"')
+                                throw new LexicalException("Invalid string");
+                            else {
+                                pos++;
+                                tokenLength++;
+                                ss += ch;
+                            }
                         }
                     }
                 }
@@ -350,11 +356,16 @@ public class Lexer implements ILexer {
                         ss = ss.concat(String.valueOf(ch));
                         pos++;
                         tokenLength++;
+                    } else if (ch == '.') {
+                        ss = ss.concat(String.valueOf(ch));
+                        pos++;
+                        tokenLength++;
+                        state = State.HAVE_DOT;
                     } else {
                         try {
                             Integer.parseInt(ss);
                         } catch (NumberFormatException e) {
-                            throw new LexicalException("Integer too large");
+                            throw new LexicalException(e);
                         }
                         Token t = new Token(IToken.Kind.INT_LIT, line, col, ss);
                         col += tokenLength;
@@ -370,7 +381,7 @@ public class Lexer implements ILexer {
                         try {
                             Float.parseFloat(ss);
                         } catch (NumberFormatException e) {
-                            throw new LexicalException("Float too large");
+                            throw new LexicalException(e);
                         }
                         Token t = new Token(IToken.Kind.FLOAT_LIT, line, col, ss);
                         col += tokenLength;
@@ -384,8 +395,7 @@ public class Lexer implements ILexer {
                         tokenLength++;
                         state = State.IN_FLOAT;
                     } else {
-                        // throw error (?)
-                        throw new LexicalException("Invalid Token", line, col);
+                        throw new LexicalException("Invalid token");
                     }
                 }
                 case HAVE_EQ -> {
@@ -501,7 +511,9 @@ public class Lexer implements ILexer {
                         return t;
                     }
                 }
-                default -> throw new LexicalException("Lexer bug");
+                default -> {
+                    throw new LexicalException("Invalid char");
+                }
             }
         }
         return new Token(IToken.Kind.EOF, line, col, "");

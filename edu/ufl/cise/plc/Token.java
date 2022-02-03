@@ -13,9 +13,7 @@ public class Token implements IToken {
     }
 
     @Override
-    public Kind getKind() {
-        return kind;
-    }
+    public Kind getKind() { return kind;}
 
     @Override
     public String getText() {
