@@ -5,17 +5,17 @@ import edu.ufl.cise.plc.ast.*;
 public class Parser implements IParser {
     String input;
     ILexer lexer;
+    Expr dummy;
 
     public Parser(String input) {
         this.input = input;
         lexer = CompilerComponentFactory.getLexer(input);
+        IToken dummyT = new Token(IToken.Kind.EOF, -1, -1, "dummy");
+        dummy = new BooleanLitExpr(dummyT);
     }
 
     @Override
     public ASTNode parse() throws PLCException {
-        if (input.length() == 0)
-            throw new LexicalException("Yo this string empty wyd");
-
         IToken t = lexer.next();
 
         // TODO: figure out how to do this recursively (pass test8)
@@ -32,7 +32,7 @@ public class Parser implements IParser {
                         }
                         // is a UnaryExprPostfix
                         case LSQUARE -> {
-                            return unaryPostfix(t, b);
+                            dummy = unaryPostfix(t, b);
                         }
                         default -> {
                             return b;
@@ -47,7 +47,7 @@ public class Parser implements IParser {
                             return binary(t, b);
                         }
                         case LSQUARE -> {
-                            return unaryPostfix(t, b);
+                            dummy = unaryPostfix(t, b);
                         }
                         default -> {
                             return b;
@@ -92,7 +92,7 @@ public class Parser implements IParser {
                             return binary(t, b);
                         }
                         case LSQUARE -> {
-                            return unaryPostfix(t, b);
+                            dummy = unaryPostfix(t, b);
                         }
                         default -> {
                             return b;
@@ -108,10 +108,16 @@ public class Parser implements IParser {
                     return unary(t);
                 }
             }
+            switch (lexer.peek().getKind()) {
+                case PLUS, MINUS, TIMES, DIV, MOD, AND, OR, LE, GE, GT, LT, EQUALS, NOT_EQUALS -> {
+                    dummy = binary(t, dummy);
+                }
+            }
             t = lexer.next();
         }
-        return null;
+        return dummy;
     }
+
     // ConditionalExpr ::= 'if' '(' Expr ')' Expr 'else'  Expr 'fi'
     private ConditionalExpr conditional(IToken t) throws PLCException {
         // t = 'if'

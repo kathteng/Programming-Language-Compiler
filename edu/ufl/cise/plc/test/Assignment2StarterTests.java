@@ -1,37 +1,18 @@
 package edu.ufl.cise.plc.test;
 
-import static edu.ufl.cise.plc.IToken.Kind.AND;
-import static edu.ufl.cise.plc.IToken.Kind.BANG;
-import static edu.ufl.cise.plc.IToken.Kind.COLOR_OP;
-import static edu.ufl.cise.plc.IToken.Kind.MINUS;
-import static edu.ufl.cise.plc.IToken.Kind.PLUS;
-import static edu.ufl.cise.plc.IToken.Kind.TIMES;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-
 import edu.ufl.cise.plc.CompilerComponentFactory;
 import edu.ufl.cise.plc.IParser;
 import edu.ufl.cise.plc.LexicalException;
 import edu.ufl.cise.plc.SyntaxException;
-import edu.ufl.cise.plc.ast.ASTNode;
-import edu.ufl.cise.plc.ast.BinaryExpr;
-import edu.ufl.cise.plc.ast.BooleanLitExpr;
-import edu.ufl.cise.plc.ast.ConditionalExpr;
-import edu.ufl.cise.plc.ast.Expr;
-import edu.ufl.cise.plc.ast.FloatLitExpr;
-import edu.ufl.cise.plc.ast.IdentExpr;
-import edu.ufl.cise.plc.ast.IntLitExpr;
-import edu.ufl.cise.plc.ast.PixelSelector;
-import edu.ufl.cise.plc.ast.StringLitExpr;
-import edu.ufl.cise.plc.ast.UnaryExpr;
-import edu.ufl.cise.plc.ast.UnaryExprPostfix;
+import edu.ufl.cise.plc.ast.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+
+import static edu.ufl.cise.plc.IToken.Kind.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 class Assignment2StarterTests {
 
