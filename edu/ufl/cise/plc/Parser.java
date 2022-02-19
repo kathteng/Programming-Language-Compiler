@@ -1,183 +1,218 @@
 package edu.ufl.cise.plc;
 
+import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.*;
 
 public class Parser implements IParser {
-    String input;
-    ILexer lexer;
-    Expr dummy;
+    final String input;
+    private final ILexer lexer;
+    private IToken t;
 
     public Parser(String input) {
         this.input = input;
         lexer = CompilerComponentFactory.getLexer(input);
-        IToken dummyT = new Token(IToken.Kind.EOF, -1, -1, "dummy");
-        dummy = new BooleanLitExpr(dummyT);
     }
 
     @Override
     public ASTNode parse() throws PLCException {
-        IToken t = lexer.next();
+        t = lexer.next();
 
-        // TODO: figure out how to do this recursively (pass test8)
-        // go through each token in input, then work our way up the parse tree
-        while (t.getKind() != IToken.Kind.EOF) {
-            switch (t.getKind()) {
-                case BOOLEAN_LIT -> {
-                    BooleanLitExpr b = new BooleanLitExpr(t);
-                    IToken peek = lexer.peek();
-                    switch (peek.getKind()) {
-                        // is a BinaryExpr
-                        case PLUS, MINUS, TIMES, DIV, MOD, AND, OR, LE, GE, GT, LT, EQUALS, NOT_EQUALS -> {
-                            return binary(t, b);
-                        }
-                        // is a UnaryExprPostfix
-                        case LSQUARE -> {
-                            dummy = unaryPostfix(t, b);
-                        }
-                        default -> {
-                            return b;
-                        }
-                    }
-                }
-                case STRING_LIT -> {
-                    StringLitExpr b = new StringLitExpr(t);
-                    IToken peek = lexer.peek();
-                    switch (peek.getKind()) {
-                        case PLUS, MINUS, TIMES, DIV, MOD, AND, OR, LE, GE, GT, LT, EQUALS, NOT_EQUALS -> {
-                            return binary(t, b);
-                        }
-                        case LSQUARE -> {
-                            dummy = unaryPostfix(t, b);
-                        }
-                        default -> {
-                            return b;
-                        }
-                    }
-                }
-                case INT_LIT -> {
-                    IntLitExpr b = new IntLitExpr(t);
-                    IToken peek = lexer.peek();
-                    switch (peek.getKind()) {
-                        case PLUS, MINUS, TIMES, DIV, MOD, AND, OR, LE, GE, GT, LT, EQUALS, NOT_EQUALS -> {
-                            return binary(t, b);
-                        }
-                        case LSQUARE -> {
-                            return unaryPostfix(t, b);
-                        }
-                        default -> {
-                            return b;
-                        }
-                    }
-                }
-                case FLOAT_LIT -> {
-                    FloatLitExpr b = new FloatLitExpr(t);
-                    IToken peek = lexer.peek();
-                    switch (peek.getKind()) {
-                        case PLUS, MINUS, TIMES, DIV, MOD, AND, OR, LE, GE, GT, LT, EQUALS, NOT_EQUALS -> {
-                            return binary(t, b);
-                        }
-                        case LSQUARE -> {
-                            return unaryPostfix(t, b);
-                        }
-                        default -> {
-                            return b;
-                        }
-                    }
-                }
-                case IDENT -> {
-                    IdentExpr b = new IdentExpr(t);
-                    IToken peek = lexer.peek();
-                    switch (peek.getKind()) {
-                        case PLUS, MINUS, TIMES, DIV, MOD, AND, OR, LE, GE, GT, LT, EQUALS, NOT_EQUALS -> {
-                            return binary(t, b);
-                        }
-                        case LSQUARE -> {
-                            dummy = unaryPostfix(t, b);
-                        }
-                        default -> {
-                            return b;
-                        }
-                    }
-                }
-                // is a ConditionalExpr
-                case KW_IF -> {
-                    return conditional(t);
-                }
-                // is a UnaryExpr
-                case BANG, MINUS, COLOR_OP, IMAGE_OP -> {
-                    return unary(t);
-                }
-            }
-            switch (lexer.peek().getKind()) {
-                case PLUS, MINUS, TIMES, DIV, MOD, AND, OR, LE, GE, GT, LT, EQUALS, NOT_EQUALS -> {
-                    dummy = binary(t, dummy);
-                }
-            }
-            t = lexer.next();
-        }
-        return dummy;
+        return expr();
     }
 
+    private Expr expr() throws PLCException {
+        if (t.getKind() == IToken.Kind.EOF)
+            return null;
+
+        if (t.getKind() == IToken.Kind.KW_IF)
+            return conditional();
+        else
+            return logicalOr();
+    }
     // ConditionalExpr ::= 'if' '(' Expr ')' Expr 'else'  Expr 'fi'
-    private ConditionalExpr conditional(IToken t) throws PLCException {
-        // t = 'if'
-        IToken x = lexer.next(); // check if next token is '('
-        if (x.getKind() == IToken.Kind.LPAREN) {
-            Expr condition = (Expr) parse();
-            if (lexer.next().getKind() != IToken.Kind.RPAREN)
-                throw new SyntaxException("No right paren dumbass");
-            Expr trueCase = (Expr) parse();
-            if (lexer.next().getKind() != IToken.Kind.KW_ELSE)
+    private ConditionalExpr conditional() throws PLCException {
+        t = lexer.next();
+        if (t.getKind() == IToken.Kind.LPAREN) {
+            t = lexer.next();
+            //lexer.next(); // t = '('
+            Expr condition = expr();
+            //t = lexer.next();
+            if (t.getKind() != IToken.Kind.RPAREN)
+                throw new SyntaxException("No right paren for condition dumbass");
+            t = lexer.next();
+                //lexer.next(); // t = ')'
+            Expr trueCase = expr();
+            //t = lexer.next();
+            if (t.getKind() != IToken.Kind.KW_ELSE)
                 throw new SyntaxException("No else dumbass");
-            Expr falseCase = (Expr) parse();
-            if (lexer.next().getKind() != IToken.Kind.KW_FI)
+            t = lexer.next();
+                //lexer.next();
+            Expr falseCase = expr();
+            //t = lexer.next();
+            if (t.getKind() != IToken.Kind.KW_FI)
                 throw new SyntaxException("No fi dumbass");
-            return new ConditionalExpr(t, condition, trueCase, falseCase);
+                         
+            //lexer.next();
+            ConditionalExpr c = new ConditionalExpr(t, condition, trueCase, falseCase);
+            t = lexer.next();
+            return c;
         }
         else
-            throw new SyntaxException("Bad Conditional. Bad.");
+            throw new SyntaxException("No left paren for condition dumbass");
     }
+
+    private Expr logicalOr() throws PLCException {
+        Expr a = logicalAnd();
+        Expr b = null;
+        IToken op = null;
+        IToken start = t;
+        while (t.getKind() == IToken.Kind.OR) {
+            op = t;
+            t = lexer.next();
+            b = logicalAnd();
+        }
+        if (op == null)
+            return a;
+        return new BinaryExpr(start, a, op, b);
+    }
+
+    private Expr logicalAnd() throws PLCException {
+        Expr a = comparison();
+        Expr b = null;
+        IToken op = null;
+        while (t.getKind() == IToken.Kind.AND) {
+            op = t;
+            t = lexer.next();
+            b = comparison();
+        }
+        if (op == null)
+            return a;
+        return new BinaryExpr(t, a, op, b);
+    }
+
+    private Expr comparison() throws PLCException {
+        Expr a = additive();
+        Expr b = null;
+        IToken op = null;
+        while (t.getKind() == Kind.LE||t.getKind() == Kind.LT||t.getKind() == Kind.EQUALS||t.getKind() == Kind.GE||t.getKind() == Kind.GT||t.getKind() == Kind.NOT_EQUALS) {
+                    op = t;
+                    t = lexer.next();
+                    b = additive();
+            
+        }
+        if (op == null)
+            return a;
+        return new BinaryExpr(t, a, op, b);
+    }
+
+    private Expr additive() throws PLCException {
+        Expr a = multipl();
+        Expr b = null;
+        IToken op = null;
+        while (t.getKind() == IToken.Kind.PLUS || t.getKind() == IToken.Kind.MINUS) {
+            op = t;
+            t = lexer.next();
+            b = multipl();
+        }
+        if (op == null)
+            return a;
+        return new BinaryExpr(t, a, op, b);
+    }
+
+    private Expr multipl() throws PLCException {
+        Expr a = unary();
+        Expr b = null;
+        IToken op = null;
+        while (t.getKind() == IToken.Kind.TIMES || t.getKind() == IToken.Kind.DIV || t.getKind() == IToken.Kind.MOD) {
+            op = t;
+            t = lexer.next();
+            b = unary();
+        }
+        if (op == null)
+            return a;
+        return new BinaryExpr(t, a, op, b);
+    }
+
     // UnaryExpr ::= ('!'|'-'| COLOR_OP | IMAGE_OP) UnaryExpr  |  UnaryExprPostfix
-    private UnaryExpr unary(IToken t) throws PLCException {
-        IToken next = lexer.peek();
-        if (next.getKind() == IToken.Kind.EOF)
-            throw new SyntaxException("Bad Unary. Bad.");
-        else {
-            Expr b = (Expr) parse();
-            return new UnaryExpr(t, t, b);
+    private Expr unary() throws PLCException {
+        IToken op = null;
+        Expr a = null;
+        while (t.getKind() == IToken.Kind.BANG || t.getKind() == IToken.Kind.MINUS || t.getKind() == IToken.Kind.COLOR_OP || t.getKind() == IToken.Kind.IMAGE_OP) {
+            op = t;
+            t = lexer.next();
+            a = unary();
         }
-    }
-    // BinaryExpr = +, -, *, /, %, |, &, >, <, <=, >=, ==, !=
-    private BinaryExpr binary(IToken t, Expr e) throws PLCException {
-        IToken op = lexer.next();
-        IToken next = lexer.peek();
-        if (next.getKind() == IToken.Kind.EOF)
-            throw new SyntaxException("Bad BinaryExpr. Bad.");
-        else {
-            Expr a = (Expr) parse();
-            return new BinaryExpr(t, e, op, a);
+        if (op == null) {
+            return unaryPostfix();
         }
+        return new UnaryExpr(t, op, a);
     }
+
     // UnaryExprPostfix::= PrimaryExpr PixelSelector?
     // PixelSelector::= '[' Expr ',' Expr ']'
-    private UnaryExprPostfix unaryPostfix(IToken t, Expr e) throws PLCException {
-        // t = '['
-        IToken next = lexer.next();
-        if (next.getKind() == IToken.Kind.EOF)
-            throw new SyntaxException("Bad unaryExprPostfix. Bad.");
-        else {
-            Expr a = (Expr) parse(); // expr x
-            if (lexer.next().getKind() != IToken.Kind.COMMA)
-                throw new SyntaxException("Bad PixelSelector. Bad.");
-            else {
-                Expr b = (Expr) parse(); // expr y
-                if (lexer.peek().getKind() != IToken.Kind.RSQUARE)
-                    throw new SyntaxException("Very Bad PixelSelector. Very Bad.");
-                else {
-                    PixelSelector p = new PixelSelector(next, a, b);
-                    return new UnaryExprPostfix(t, e, p);
-                }
+    private Expr unaryPostfix() throws PLCException {
+        //t = lexer.next();
+        Expr a = primary();
+        t = lexer.next();
+        if (t.getKind() == IToken.Kind.EOF)
+            return a;
+        PixelSelector b = null;
+        //while (t.getKind() != IToken.Kind.EOF) {
+            if (t.getKind() == IToken.Kind.LSQUARE) {
+                b = pixel();
+                t = lexer.next();
+            }
+        //}
+        if (b == null)
+            return a;
+        else
+            return new UnaryExprPostfix(t, a, b);
+    }
+
+    private Expr primary() throws PLCException {
+        switch (t.getKind()) {
+            case BOOLEAN_LIT -> {
+                return new BooleanLitExpr(t);
+            }
+            case IDENT -> {
+                return new IdentExpr(t);
+            }
+            case INT_LIT -> {
+                return new IntLitExpr(t);
+            }
+            case FLOAT_LIT -> {
+                return new FloatLitExpr(t);
+            }
+            case STRING_LIT -> {
+                return new StringLitExpr(t);
+            }
+            case LPAREN -> {
+                lexer.next();
+                Expr a = expr();
+                if (t.getKind() == IToken.Kind.RPAREN)
+                    return a;
+                else
+                    throw new SyntaxException("No right paren for expr dumbass");
+            }
+            default -> {
+                throw new SyntaxException("it's none of the above. fucktard");
             }
         }
+    }
+
+    private PixelSelector pixel() throws PLCException {
+            t= lexer.next();
+            Expr a = expr(); // expr x
+            if (t.getKind() != IToken.Kind.COMMA)
+                throw new SyntaxException("Bad PixelSelector. Bad.");
+            else {
+                t= lexer.next();
+                Expr b = expr(); // expr y
+                if (t.getKind() != IToken.Kind.RSQUARE)
+                    throw new SyntaxException("Very Bad PixelSelector. Very Bad.");
+                else {
+                    return new PixelSelector(t, a, b);
+                }
+            }
     }
 }

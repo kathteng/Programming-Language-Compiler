@@ -317,4 +317,52 @@ class Assignment2StarterTests {
 		});
 		show(e);
 	}
+	@DisplayName("triple_if")
+	@Test
+	public void triple_if(TestInfo testInfo) throws Exception {
+		String input = """
+				if (a < b)
+				   if (l > s)
+				      if (le == us)
+				         v
+				      else
+				         o
+				      fi
+				   else
+				      z
+				   fi
+				else
+				   c
+				fi
+				""";
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(ConditionalExpr.class));
+
+		Expr var17 = ((ConditionalExpr) ast).getCondition();
+		assertThat("", var17, instanceOf(BinaryExpr.class));
+		assertEquals(LT, ((BinaryExpr) var17).getOp().getKind());
+
+		Expr var18 = ((BinaryExpr) var17).getLeft();
+	}
+	@DisplayName("testAllOperators")
+	@Test
+
+	public void testAllOperators(TestInfo testInfo) throws Exception {
+		String input = """
+				(false | 2 + 25 * 4/3 - 8 % a[(36+b),1] >= 0) == true
+				""";
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(BinaryExpr.class));
+		assertEquals(EQUALS, ((BinaryExpr) ast).getOp().getKind());
+
+		Expr paren = ((BinaryExpr) ast).getLeft();
+		assertThat("", paren, instanceOf(BinaryExpr.class));
+		assertEquals(OR, ((BinaryExpr) paren).getOp().getKind());
+	}
 }
