@@ -187,7 +187,7 @@ public class Parser implements IParser {
                 return new StringLitExpr(t);
             }
             case LPAREN -> {
-                lexer.next();
+                t = lexer.next();
                 Expr a = expr();
                 if (t.getKind() == IToken.Kind.RPAREN)
                     return a;
@@ -201,12 +201,12 @@ public class Parser implements IParser {
     }
 
     private PixelSelector pixel() throws PLCException {
-            t= lexer.next();
+            t = lexer.next();
             Expr a = expr(); // expr x
             if (t.getKind() != IToken.Kind.COMMA)
                 throw new SyntaxException("Bad PixelSelector. Bad.");
             else {
-                t= lexer.next();
+                t = lexer.next();
                 Expr b = expr(); // expr y
                 if (t.getKind() != IToken.Kind.RSQUARE)
                     throw new SyntaxException("Very Bad PixelSelector. Very Bad.");
