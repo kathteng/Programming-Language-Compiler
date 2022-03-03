@@ -49,6 +49,9 @@ public class Parser implements IParser {
                 t = lexer.next();
                 while (t.getKind() == Kind.COMMA) {
                     t = lexer.next();
+                    if (t.getKind() == Kind.EOF || t.getKind() == Kind.RPAREN)
+                        throw new SyntaxException("comma cant end it all my dude");
+                    
                     params.add(nameDef());
                     t = lexer.next();
                 }
