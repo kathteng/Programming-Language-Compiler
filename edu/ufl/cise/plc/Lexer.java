@@ -108,9 +108,9 @@ public class Lexer implements ILexer {
                                 state = State.IN_STRING;
                             }
                             case '#' -> {
-                                ss = ss.concat("#");
                                 state = State.IN_COMMENT;
                                 pos++;
+                                col++;
                             }
                             case '=' -> {
                                 ss = ss.concat("=");

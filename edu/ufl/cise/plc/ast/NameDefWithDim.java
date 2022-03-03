@@ -7,8 +7,13 @@ public class NameDefWithDim extends NameDef{
 
 	final Dimension dim;
 
-	public NameDefWithDim(IToken firstToken, String name, String type, Dimension dim) {
-		super(firstToken,name,type);
+	public NameDefWithDim(IToken firstToken, String type, String name, Dimension dim) {
+		super(firstToken,type, name);
+		this.dim = dim;
+	}
+	
+	public NameDefWithDim(IToken firstToken, IToken type, IToken name, Dimension dim) {
+		super(firstToken,type, name);
 		this.dim = dim;
 	}
 
