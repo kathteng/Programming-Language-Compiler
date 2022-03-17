@@ -377,7 +377,7 @@ public class Parser implements IParser {
                 return new ConsoleExpr(t);
             }
             default -> {
-                throw new SyntaxException("it's none of the above. fucktard");
+                throw new SyntaxException("it's none of the above lil dumdum");
             }
         }
     }

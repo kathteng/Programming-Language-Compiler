@@ -1366,64 +1366,6 @@ public void Test7(TestInfo testInfo) throws Exception {
   assertEquals("a", ((NameDef) var3).getName());
 }
 
-@DisplayName("Many Returns")
-@Test
-public void ManyReturns(TestInfo testInfo) throws Exception {
-  String input = """
-        void foo()
-        ^1;
-        ^(if (a == 2) b == 2 else c == 1 fi);
-        ^(((foo)));
-        ^console;
-        ^<<a,b,c>>;
-        """;
-  show("-------------");
-  show(input);
-  ASTNode ast = getAST(input);
-  show(ast);
-  assertThat("", ast, instanceOf(Program.class));
-  assertEquals(Type.VOID, ((Program) ast).getReturnType());
-  List<NameDef> params = ((Program) ast).getParams();
-  assertEquals(0, params.size());
-  List<ASTNode> decsAndStatements = ((Program) ast).getDecsAndStatements();
-
-  assertEquals(5, decsAndStatements.size());
-
-  ASTNode var0 = decsAndStatements.get(0);
-  assertThat("", var0, instanceOf(ReturnStatement.class));
-  Expr var1 = ((ReturnStatement) var0).getExpr();
-  assertThat("", var1, instanceOf(IntLitExpr.class));
-  assertEquals(1, ((IntLitExpr) var1).getValue());
-
-  ASTNode var2 = decsAndStatements.get(1);
-  assertThat("", var2, instanceOf(ReturnStatement.class));
-  Expr var3 = ((ReturnStatement) var2).getExpr();
-  assertThat("", var3, instanceOf(ConditionalExpr.class));
-  assertEquals("2", ((ConditionalExpr) var3).getCondition().getText());
-  assertEquals("2", ((ConditionalExpr) var3).getTrueCase().getText());
-  assertEquals("1", ((ConditionalExpr) var3).getFalseCase().getText());
-
-  ASTNode var4 = decsAndStatements.get(2);
-  assertThat("", var4, instanceOf(ReturnStatement.class));
-  Expr var5 = ((ReturnStatement) var4).getExpr();
-  assertThat("", var5, instanceOf(Expr.class));
-  assertEquals("foo", ((Expr) var5).getText());
-
-  ASTNode var6 = decsAndStatements.get(3);
-  assertThat("", var6, instanceOf(ReturnStatement.class));
-  Expr var7 = ((ReturnStatement) var6).getExpr();
-  assertThat("", var7, instanceOf(ConsoleExpr.class));
-  assertEquals("console", ((ConsoleExpr) var7).getText());
-
-  ASTNode var8 = decsAndStatements.get(4);
-  assertThat("", var8, instanceOf(ReturnStatement.class));
-  Expr var9 = ((ReturnStatement) var8).getExpr();
-  assertThat("", var9, instanceOf(ColorExpr.class));
-  assertEquals("a", ((ColorExpr) var9).getRed().getText());
-  assertEquals("b", ((ColorExpr) var9).getGreen().getText());
-  assertEquals("c", ((ColorExpr) var9).getBlue().getText());
-}
-
 @DisplayName("ColorConst")
 @Test
 public void ColorConst(TestInfo testInfo) throws Exception {
