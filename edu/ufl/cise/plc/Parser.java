@@ -256,10 +256,12 @@ public class Parser implements IParser {
         Expr a = multipl();
         Expr b = null;
         IToken op = null;
+        BinaryExpr binary = null;
         while (t.getKind() == IToken.Kind.PLUS || t.getKind() == IToken.Kind.MINUS) {
             op = t;
             t = lexer.next();
             b = multipl();
+            //a = new BinaryExpr(firstToken, a, op, b);
         }
         if (op == null)
             return a;
