@@ -55,7 +55,7 @@ public class CodeGenVisitor implements ASTVisitor {
         // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
         if (intLitExpr.getCoerceTo() != null && intLitExpr.getCoerceTo() != Type.INT)
-            sb.append("(" + intLitExpr.getCoerceTo().toString() + ")");
+            sb.append("(" + intLitExpr.getCoerceTo().toString().toLowerCase() + ")");
         sb.append(intLitExpr.getValue());
         return sb.toString();
     }
@@ -64,21 +64,22 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitFloatLitExpr(FloatLitExpr floatLitExpr, Object arg) throws Exception {
         // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
+        if (floatLitExpr.getCoerceTo() != null && floatLitExpr.getCoerceTo() != Type.FLOAT)
+            sb.append("(" + floatLitExpr.getCoerceTo().toString().toLowerCase() + ")");
         sb.append(floatLitExpr.getValue() + "f");
         return sb.toString();
     }
 
     @Override
     public Object visitColorConstExpr(ColorConstExpr colorConstExpr, Object arg) throws Exception {
-        // TODO Auto-generated method stub
-        StringBuilder sb = (StringBuilder) arg;
-        return sb.toString();
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public Object visitConsoleExpr(ConsoleExpr consoleExpr, Object arg) throws Exception {
         // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
+        sb.append("(");
         return sb.toString();
     }
 
@@ -98,59 +99,73 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
+        sb.append("(");
+        Expr left = binaryExpr.getLeft();
+        Expr right = binaryExpr.getRight();
+        left.visit(this, sb);
+        sb.append(" " + binaryExpr.getOp().getText() + " ");
+        right.visit(this, sb);
+        sb.append(")");
         return sb.toString();
     }
 
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
+        if (identExpr.getCoerceTo() != null && identExpr.getCoerceTo() != identExpr.getType())
+            sb.append("(" + identExpr.getCoerceTo().toString().toLowerCase() + ")");
         sb.append(identExpr.getText());
         return sb.toString();
     }
 
     @Override
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
+        sb.append("(");
+        conditionalExpr.getCondition().visit(this, sb);
+        sb.append(") ? ");
+        conditionalExpr.getTrueCase().visit(this, sb);
+        sb.append(" : ");
+        conditionalExpr.getFalseCase().visit(this, sb);
         return sb.toString();
     }
 
     @Override
     public Object visitDimension(Dimension dimension, Object arg) throws Exception {
-        // TODO Auto-generated method stub
-        StringBuilder sb = (StringBuilder) arg;
-        return sb.toString();
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
-        // TODO Auto-generated method stub
-        StringBuilder sb = (StringBuilder) arg;
-        return sb.toString();
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
-        sb.append(assignmentStatement.getName() + " = " + assignmentStatement.getExpr() + ";\n");
+        Expr expr = assignmentStatement.getExpr();
+        sb.append(assignmentStatement.getName() + " = ");
+        expr.visit(this, sb);
+        sb.append(";\n");
         return sb.toString();
     }
 
     @Override
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
+        sb.append("ConsoleIO.console.println(");
+        writeStatement.getSource().visit(this, sb);
+        sb.append(");\n");
         return sb.toString();
     }
 
     @Override
     public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
+        sb.append(readStatement.getName() + " = ");
+        readStatement.getSource().visit(this, sb);
+        sb.append(";\n");
         return sb.toString();
     }
 
@@ -185,7 +200,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
         String type = nameDef.getType().toString();
         if (nameDef.getType() == Type.STRING)
@@ -199,14 +213,11 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        // TODO Auto-generated method stub
-        StringBuilder sb = (StringBuilder) arg;
-        return sb.toString();
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
         sb.append("return ");
         Expr expr = returnStatement.getExpr();
@@ -217,7 +228,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
         NameDef nameDef = declaration.getNameDef();
         nameDef.visit(this, sb);
@@ -232,9 +242,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
-        // TODO Auto-generated method stub
-        StringBuilder sb = (StringBuilder) arg;
-        return sb.toString();
+        throw new UnsupportedOperationException("Not implemented");
     }
     
 }
