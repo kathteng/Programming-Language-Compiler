@@ -302,10 +302,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 		check(assignmentStatement.getTargetDec() != null, assignmentStatement, "target not acquired, abort mission");
 		Type targetType = assignmentStatement.getTargetDec().getType();
 		assignmentStatement.getTargetDec().setInitialized(true);
-		assignmentStatement.getExpr().visit(this, arg);
-
+		
 		if (targetType != Type.IMAGE) {
 			check(assignmentStatement.getSelector() == null, assignmentStatement, "listen darling, you're not supposed to select pixels here");
+			assignmentStatement.getExpr().visit(this, arg);
 			check(assignmentCompatible(assignmentStatement.getTargetDec(), assignmentStatement.getExpr()), assignmentStatement, "honey, we're not compatible I'm sorry :c");
 		}
 		else {

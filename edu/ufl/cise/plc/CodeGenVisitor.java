@@ -31,9 +31,11 @@ import edu.ufl.cise.plc.ast.Types.Type;
 
 public class CodeGenVisitor implements ASTVisitor {
     String pkgName;
+    StringBuilder imports;
 
     public CodeGenVisitor (String packageName) {
         pkgName = packageName;
+        imports = new StringBuilder();
     }
 
     @Override
@@ -77,9 +79,12 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitConsoleExpr(ConsoleExpr consoleExpr, Object arg) throws Exception {
-        // TODO Auto-generated method stub
+        if (!imports.toString().contains("edu.ufl.cise.plc.runtime.ConsoleIO;"))
+            imports.append("import edu.ufl.cise.plc.runtime.ConsoleIO;\n");
         StringBuilder sb = (StringBuilder) arg;
-        sb.append("(");
+        sb.append("(" + consoleExpr.getCoerceTo().toString().toLowerCase() + ") ");
+        sb.append("ConsoleIO.readValueFromConsole(\"" + consoleExpr.getCoerceTo().toString() + "\", \"Enter ");
+        sb.append(consoleExpr.getCoerceTo().toString().toLowerCase() + ":\");\n");
         return sb.toString();
     }
 
@@ -92,8 +97,10 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpression, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
+        sb.append("(" + unaryExpression.getOp().getText());
+        unaryExpression.getExpr().visit(this, sb);
+        sb.append(")");
         return sb.toString();
     }
 
@@ -195,6 +202,8 @@ public class CodeGenVisitor implements ASTVisitor {
             node.visit(this, sb);
         
         sb.append("\t}\n}\n");
+        int index = sb.indexOf("public class");
+        sb.insert(index - 1, imports);
         return sb.toString();
     }
 
