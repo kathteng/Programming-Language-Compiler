@@ -54,7 +54,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitIntLitExpr(IntLitExpr intLitExpr, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
         if (intLitExpr.getCoerceTo() != null && intLitExpr.getCoerceTo() != Type.INT)
             sb.append("(" + intLitExpr.getCoerceTo().toString().toLowerCase() + ")");
@@ -64,7 +63,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitFloatLitExpr(FloatLitExpr floatLitExpr, Object arg) throws Exception {
-        // TODO Auto-generated method stub
         StringBuilder sb = (StringBuilder) arg;
         if (floatLitExpr.getCoerceTo() != null && floatLitExpr.getCoerceTo() != Type.FLOAT)
             sb.append("(" + floatLitExpr.getCoerceTo().toString().toLowerCase() + ")");

@@ -410,6 +410,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			check(declaration.getExpr().getType() == Type.CONSOLE || (declaration.getExpr().getType() == Type.STRING), declaration, "honey, I can't read you I'm sorry");
 			if (declaration.getExpr().getType() == Type.CONSOLE)
 				declaration.getExpr().setCoerceTo(declaration.getNameDef().getType());
+			declaration.getNameDef().setInitialized(true);
 		}		
 		return null;
 	}

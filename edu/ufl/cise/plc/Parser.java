@@ -210,14 +210,22 @@ public class Parser implements IParser {
         Expr a = logicalAnd();
         Expr b = null;
         IToken op = null;
+        BinaryExpr binary = null;
+        if (t.getKind() == IToken.Kind.OR) {
+            op = t;
+            t = lexer.next();
+            b = logicalAnd();
+            binary = new BinaryExpr(firstToken, a, op, b);
+        }
         while (t.getKind() == IToken.Kind.OR) {
             op = t;
             t = lexer.next();
             b = logicalAnd();
+            binary = new BinaryExpr(firstToken, binary, op, b);
         }
         if (op == null)
             return a;
-        return new BinaryExpr(firstToken, a, op, b);
+        return binary;
     }
 
     private Expr logicalAnd() throws PLCException {
@@ -225,14 +233,22 @@ public class Parser implements IParser {
         Expr a = comparison();
         Expr b = null;
         IToken op = null;
+        BinaryExpr binary = null;
+        if (t.getKind() == IToken.Kind.AND) {
+            op = t;
+            t = lexer.next();
+            b = comparison();
+            binary = new BinaryExpr(firstToken, a, op, b);
+        }
         while (t.getKind() == IToken.Kind.AND) {
             op = t;
             t = lexer.next();
             b = comparison();
+            binary = new BinaryExpr(firstToken, binary, op, b);
         }
         if (op == null)
             return a;
-        return new BinaryExpr(firstToken, a, op, b);
+        return binary;
     }
 
     private Expr comparison() throws PLCException {
@@ -240,15 +256,22 @@ public class Parser implements IParser {
         Expr a = additive();
         Expr b = null;
         IToken op = null;
+        BinaryExpr binary = null;
+        if (t.getKind() == Kind.LE||t.getKind() == Kind.LT||t.getKind() == Kind.EQUALS||t.getKind() == Kind.GE||t.getKind() == Kind.GT||t.getKind() == Kind.NOT_EQUALS) {
+            op = t;
+            t = lexer.next();
+            b = additive();
+            binary = new BinaryExpr(firstToken, a, op, b);
+        }
         while (t.getKind() == Kind.LE||t.getKind() == Kind.LT||t.getKind() == Kind.EQUALS||t.getKind() == Kind.GE||t.getKind() == Kind.GT||t.getKind() == Kind.NOT_EQUALS) {
-                    op = t;
-                    t = lexer.next();
-                    b = additive();
-            
+            op = t;
+            t = lexer.next();
+            b = additive();
+            binary = new BinaryExpr(firstToken, binary, op, b);
         }
         if (op == null)
             return a;
-        return new BinaryExpr(firstToken, a, op, b);
+        return binary;
     }
 
     private Expr additive() throws PLCException {
@@ -257,15 +280,21 @@ public class Parser implements IParser {
         Expr b = null;
         IToken op = null;
         BinaryExpr binary = null;
+        if (t.getKind() == IToken.Kind.PLUS || t.getKind() == IToken.Kind.MINUS) {
+            op = t;
+            t = lexer.next();
+            b = multipl();
+            binary = new BinaryExpr(firstToken, a, op, b);
+        }
         while (t.getKind() == IToken.Kind.PLUS || t.getKind() == IToken.Kind.MINUS) {
             op = t;
             t = lexer.next();
             b = multipl();
-            //a = new BinaryExpr(firstToken, a, op, b);
+            binary = new BinaryExpr(firstToken, binary, op, b);
         }
         if (op == null)
             return a;
-        return new BinaryExpr(firstToken, a, op, b);
+        return binary;
     }
 
     private Expr multipl() throws PLCException {
@@ -273,14 +302,22 @@ public class Parser implements IParser {
         Expr a = unary();
         Expr b = null;
         IToken op = null;
+        BinaryExpr binary = null;
+        if (t.getKind() == IToken.Kind.TIMES || t.getKind() == IToken.Kind.DIV || t.getKind() == IToken.Kind.MOD) {
+            op = t;
+            t = lexer.next();
+            b = unary();
+            binary = new BinaryExpr(firstToken, a, op, b);
+        }
         while (t.getKind() == IToken.Kind.TIMES || t.getKind() == IToken.Kind.DIV || t.getKind() == IToken.Kind.MOD) {
             op = t;
             t = lexer.next();
             b = unary();
+            binary = new BinaryExpr(firstToken, binary, op, b);
         }
         if (op == null)
             return a;
-        return new BinaryExpr(firstToken, a, op, b);
+        return binary;
     }
 
     // UnaryExpr ::= ('!'|'-'| COLOR_OP | IMAGE_OP) UnaryExpr  |  UnaryExprPostfix

@@ -445,24 +445,67 @@ void testCast() throws Exception {//a and d should be cast to a float type
 	  checkResult(input,  null, 30);
 	}
 
-@Test
-void testCoerce() throws Exception {
-  String input = """
-     int a()
-     boolean x = false;
-     int y;
-     float c = 5.2;
-     float b = 3.7;
-     int d;
-     d = c + b;
-     float z = if (!x) d else 5 fi;
-     y = z;    
-     ^ y;
-     """;
-  checkResult(input,  null, 8);
-}
+	@Test
+	void testCoerce() throws Exception {
+	String input = """
+		int a()
+		boolean x = false;
+		int y;
+		float c = 5.2;
+		float b = 3.7;
+		int d;
+		d = c + b;
+		float z = if (!x) d else 5 fi;
+		y = z;    
+		^ y;
+		""";
+	checkResult(input,  null, 8);
+	}
+
+	@Test
+	void testStringNotEquals() throws Exception{
+		String input = """
+				boolean a(string b)
+				^ (b != "Test");
+				""";
+		String b = new String("test");
+		Object params[] = {b};
+		checkResult(input, params, true);
+	}
 
 
+	@Test
+	void testStringEquals() throws Exception{
+		String input = """
+				boolean a(string b)
+				^ (b == "test");
+				""";
+		String b = new String("test");
+		Object params[] = {b};
+		checkResult(input, params, true);
+	}
 
+
+	@Test
+	void testMany() throws Exception{
+		String input = """
+				boolean a(int b, float c, string d)
+				boolean e;
+				e <- console;
+				write "e = " -> console;
+				write e -> console;
+				boolean f = if (b >= c) e else false fi;
+				write "\nf = " -> console;
+				write f -> console;
+				string g = "test";
+				boolean h = if (d == g) b >= c else b < c fi;
+				^ h;
+				""";
+		int b = 42;
+		float c = 42.0f;
+		String d = new String("test");
+		Object params[] = {b, c, d};
+		checkResult(input, params, true);
+	}
 
 }
