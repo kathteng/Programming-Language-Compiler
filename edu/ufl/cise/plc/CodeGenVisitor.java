@@ -106,6 +106,10 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
         StringBuilder sb = (StringBuilder) arg;
         if (binaryExpr.getCoerceTo() != null && binaryExpr.getCoerceTo() != binaryExpr.getType()) {
+            if (binaryExpr.getCoerceTo() == Type.BOOLEAN)
+                sb.append("(Boolean)");
+            else if (binaryExpr.getCoerceTo() == Type.STRING)
+                sb.append("(String)");
             sb.append("(" + binaryExpr.getCoerceTo().toString().toLowerCase() + ")");
         }
         sb.append("(");
@@ -121,8 +125,13 @@ public class CodeGenVisitor implements ASTVisitor {
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws Exception {
         StringBuilder sb = (StringBuilder) arg;
-        if (identExpr.getCoerceTo() != null && identExpr.getCoerceTo() != identExpr.getType())
+        if (identExpr.getCoerceTo() != null && identExpr.getCoerceTo() != identExpr.getType()) {
+            if (identExpr.getCoerceTo() == Type.BOOLEAN)
+                sb.append("(Boolean)");
+            else if (identExpr.getCoerceTo() == Type.STRING)
+                sb.append("(String)");
             sb.append("(" + identExpr.getCoerceTo().toString().toLowerCase() + ")");
+        }
         sb.append(identExpr.getText());
         return sb.toString();
     }
