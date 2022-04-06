@@ -48,7 +48,7 @@ public class CodeGenVisitor implements ASTVisitor {
     @Override
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws Exception {
         StringBuilder sb = (StringBuilder) arg;
-        sb.append("\"" + stringLitExpr.getValue() + "\"");
+        sb.append("\"\"\"\n" + stringLitExpr.getValue() + "\"\"\"");
         return sb.toString();
     }
 
