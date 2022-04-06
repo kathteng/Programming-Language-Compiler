@@ -107,6 +107,9 @@ public class CodeGenVisitor implements ASTVisitor {
     @Override
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
         StringBuilder sb = (StringBuilder) arg;
+        if (binaryExpr.getCoerceTo() != null && binaryExpr.getCoerceTo() != binaryExpr.getType()) {
+            sb.append("(" + binaryExpr.getCoerceTo().toString().toLowerCase() + ")");
+        }
         sb.append("(");
         Expr left = binaryExpr.getLeft();
         Expr right = binaryExpr.getRight();
@@ -129,12 +132,13 @@ public class CodeGenVisitor implements ASTVisitor {
     @Override
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
         StringBuilder sb = (StringBuilder) arg;
-        sb.append("(");
+        sb.append("((");
         conditionalExpr.getCondition().visit(this, sb);
         sb.append(") ? ");
         conditionalExpr.getTrueCase().visit(this, sb);
         sb.append(" : ");
         conditionalExpr.getFalseCase().visit(this, sb);
+        sb.append(")");
         return sb.toString();
     }
 
@@ -243,6 +247,8 @@ public class CodeGenVisitor implements ASTVisitor {
         if (declaration.getOp() != null) {
             sb.append(" " + declaration.getOp().getText() + " ");
             Expr expr = declaration.getExpr();
+            if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType())
+                sb.append("(" + expr.getCoerceTo().toString().toLowerCase() + ")");
             expr.visit(this, sb);
         }
         sb.append(";\n");
