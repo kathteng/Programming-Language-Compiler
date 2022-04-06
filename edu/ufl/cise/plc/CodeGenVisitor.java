@@ -2,6 +2,7 @@ package edu.ufl.cise.plc;
 
 import java.util.List;
 
+import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.ASTNode;
 import edu.ufl.cise.plc.ast.ASTVisitor;
 import edu.ufl.cise.plc.ast.AssignmentStatement;
@@ -116,8 +117,15 @@ public class CodeGenVisitor implements ASTVisitor {
         Expr left = binaryExpr.getLeft();
         Expr right = binaryExpr.getRight();
         left.visit(this, sb);
-        sb.append(" " + binaryExpr.getOp().getText() + " ");
-        right.visit(this, sb);
+        if (left.getType() == Type.STRING && binaryExpr.getOp().getKind() == Kind.EQUALS && right.getType() == Type.STRING) {
+            sb.append(".equals(");
+            right.visit(this, sb);
+            sb.append(")");
+        }
+        else {
+            sb.append(" " + binaryExpr.getOp().getText() + " ");
+            right.visit(this, sb);
+        }
         sb.append(")");
         return sb.toString();
     }
