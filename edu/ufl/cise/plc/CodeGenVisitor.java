@@ -107,22 +107,29 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
         StringBuilder sb = (StringBuilder) arg;
         if (binaryExpr.getCoerceTo() != null && binaryExpr.getCoerceTo() != binaryExpr.getType()) {
-            if (binaryExpr.getCoerceTo() == Type.BOOLEAN)
-                sb.append("(Boolean)");
-            else if (binaryExpr.getCoerceTo() == Type.STRING)
+            if (binaryExpr.getCoerceTo() == Type.STRING)
                 sb.append("(String)");
-            sb.append("(" + binaryExpr.getCoerceTo().toString().toLowerCase() + ")");
+            else
+                sb.append("(" + binaryExpr.getCoerceTo().toString().toLowerCase() + ")");
         }
         sb.append("(");
         Expr left = binaryExpr.getLeft();
         Expr right = binaryExpr.getRight();
-        left.visit(this, sb);
-        if (left.getType() == Type.STRING && binaryExpr.getOp().getKind() == Kind.EQUALS && right.getType() == Type.STRING) {
-            sb.append(".equals(");
+        if (left.getType() == Type.STRING && right.getType() == Type.STRING) {
+            if (binaryExpr.getOp().getKind() == Kind.EQUALS) {
+                left.visit(this, sb);
+                sb.append(".equals(");
+            }
+            else if (binaryExpr.getOp().getKind() == Kind.NOT_EQUALS) {
+                sb.append("!");
+                left.visit(this, sb);
+                sb.append(".equals(");
+            }
             right.visit(this, sb);
             sb.append(")");
         }
         else {
+            left.visit(this, sb);
             sb.append(" " + binaryExpr.getOp().getText() + " ");
             right.visit(this, sb);
         }
@@ -134,11 +141,10 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws Exception {
         StringBuilder sb = (StringBuilder) arg;
         if (identExpr.getCoerceTo() != null && identExpr.getCoerceTo() != identExpr.getType()) {
-            if (identExpr.getCoerceTo() == Type.BOOLEAN)
-                sb.append("(Boolean)");
-            else if (identExpr.getCoerceTo() == Type.STRING)
+            if (identExpr.getCoerceTo() == Type.STRING)
                 sb.append("(String)");
-            sb.append("(" + identExpr.getCoerceTo().toString().toLowerCase() + ")");
+            else
+                sb.append("(" + identExpr.getCoerceTo().toString().toLowerCase() + ")");
         }
         sb.append(identExpr.getText());
         return sb.toString();
