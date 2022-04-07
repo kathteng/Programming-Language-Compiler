@@ -83,7 +83,7 @@ public class CodeGenVisitor implements ASTVisitor {
         StringBuilder sb = (StringBuilder) arg;
         sb.append("(" + consoleExpr.getCoerceTo().toString().toLowerCase() + ") ");
         sb.append("ConsoleIO.readValueFromConsole(\"" + consoleExpr.getCoerceTo().toString() + "\", \"Enter ");
-        sb.append(consoleExpr.getCoerceTo().toString().toLowerCase() + ":\");\n");
+        sb.append(consoleExpr.getCoerceTo().toString().toLowerCase() + ":\")");
         return sb.toString();
     }
 
