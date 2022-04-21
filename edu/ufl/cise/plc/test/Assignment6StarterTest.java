@@ -155,7 +155,7 @@ class Assignment6StarterTest {
 				      image[width,height] b <- url;
 				      ^b;
 				      """;
-		String url = "https://www.ufl.edu/media/wwwufledu/images/about/aerial_tigert_stadium.jpg";
+		String url = "https://upload.wikimedia.org/wikipedia/commons/9/92/Albert_and_Alberta.jpg";
 		Object[] params = { url, 300, 200 };
 		BufferedImage refImage = showRef(FileURLIO.readImage(url, 300, 200));
 		show(check(input, params, refImage));
@@ -213,7 +213,7 @@ class Assignment6StarterTest {
                 ^b;
 
 				""";
-		String url = "https://www.ufl.edu/media/wwwufledu/images/nav/academics.jpg";
+		String url = "https://upload.wikimedia.org/wikipedia/commons/9/92/Albert_and_Alberta.jpg";
 		BufferedImage inputImage = FileURLIO.readImage(url);
 		int w = inputImage.getWidth();
 		int h = inputImage.getHeight();

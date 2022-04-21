@@ -399,7 +399,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			if (declaration.getNameDef() instanceof NameDefWithDim)
 				check(declaration.getNameDef().getDim() != null, declaration, "no dimension? :(");
 			else
-				check(op == Kind.ASSIGN && declaration.getExpr().getType() == Type.IMAGE, declaration, "reminder that image is close minded");
+				check(declaration.getExpr().getType() == Type.IMAGE || declaration.getExpr().getType() == Type.STRING, declaration, "reminder that image is close minded");
 		}			
 
 		if (op == Kind.ASSIGN) {
