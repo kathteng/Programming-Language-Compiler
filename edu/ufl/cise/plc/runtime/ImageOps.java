@@ -265,20 +265,20 @@ public class ImageOps {
 		return result;
 	}
 	
-//	public static BufferedImage binaryImageScalarOp(OP op, BufferedImage left, float right) {
-//		int lwidth = left.getWidth();
-//		int lheight = left.getHeight();
-//		BufferedImage result = new BufferedImage(lwidth, lheight, BufferedImage.TYPE_INT_RGB);
-//		ColorTupleFloat rightColor = new ColorTupleFloat(right);
-//		for (int x = 0; x < lwidth; x++) {
-//			for (int y = 0; y < lheight; y++) {
-//				ColorTupleFloat leftColor = new ColorTupleFloat(ColorTuple.unpack(left.getRGB(x, y)));
-//				ColorTupleFloat newColor = binaryTupleOp(op, leftColor, rightColor);
-//				result.setRGB(x, y, newColor.pack());
-//			}
-//		}
-//		return result;
-//	}
+	public static BufferedImage binaryImageScalarOp(OP op, BufferedImage left, float right) {
+		int lwidth = left.getWidth();
+		int lheight = left.getHeight();
+		BufferedImage result = new BufferedImage(lwidth, lheight, BufferedImage.TYPE_INT_RGB);
+		ColorTupleFloat rightColor = new ColorTupleFloat(right);
+		for (int x = 0; x < lwidth; x++) {
+			for (int y = 0; y < lheight; y++) {
+				ColorTupleFloat leftColor = new ColorTupleFloat(ColorTuple.unpack(left.getRGB(x, y)));
+				ColorTupleFloat newColor = binaryTupleOp(op, leftColor, rightColor);
+				result.setRGB(x, y, newColor.pack());
+			}
+		}
+		return result;
+	}
 //	
 //	
 //	public static BufferedImage setAllPixels(BufferedImage image, int val) {

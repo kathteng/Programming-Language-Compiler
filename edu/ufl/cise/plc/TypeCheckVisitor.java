@@ -382,6 +382,15 @@ public class TypeCheckVisitor implements ASTVisitor {
 			rhs.setCoerceTo(targetType);
 			return true;
 		}
+		else if (targetType == Type.IMAGE) {
+			if (rhsType == Type.INT)
+				rhs.setCoerceTo(COLOR);
+			else if (rhsType == Type.FLOAT)
+				rhs.setCoerceTo(COLORFLOAT);
+			else if (rhsType == COLOR || rhsType == COLORFLOAT)
+				return true;
+			return true;
+		}
 		return false;
 	}
 	
