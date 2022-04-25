@@ -124,13 +124,13 @@ public class Assignment6Tests {
 		show("\n===INPUT===\n");
 		show(input);
 		show("\n\n\n===OUTPUT===\n");
-		//if (CHECK_TIMEOUT) {
-			//assertTimeoutPreemptively(Duration.ofSeconds(TIMEOUT_SECONDS), () -> {
-				//returnValue = exec(input, params);
-			//});
-		//} else {
+		if (CHECK_TIMEOUT) {
+			assertTimeoutPreemptively(Duration.ofSeconds(TIMEOUT_SECONDS), () -> {
+				returnValue = exec(input, params);
+			});
+		} else {
 			returnValue = exec(input, params);
-		//}
+		}
 
 		checkEqual(expected, returnValue);
 
@@ -1393,7 +1393,7 @@ public class Assignment6Tests {
 				   image[size,size] f;
 				   f[x,y] = <<x,x,x>>%<<256,256,256>> +  <<y,y,y>>%<<256,256,256>>;
 				   write f -> console;
-				   write f -> "testImagetoFile";
+				   write f -> "testImageToFile";  #CORRECTED:  testImagetoFile -> testImageToFile
 				   boolean done <- console;
 				   """;
 		int size = 1024;
@@ -1805,7 +1805,7 @@ public class Assignment6Tests {
 				         """;
 		ColorTuple result = new ColorTuple(128, 129, 130);
 		checkProgram(input, result);
-		checkFile("testWriteReadColor0", result);
+		checkFile("testWriteReadColor1", result);  //CORRECTED testWriteReadColor0 -> testWriteReadColor1
 	}
 
 	@Test
