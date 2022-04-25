@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes.Name;
 
+import javax.lang.model.util.ElementScanner14;
+
 import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.ASTNode;
 import edu.ufl.cise.plc.ast.ASTVisitor;
@@ -407,8 +409,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 		if (declaration.getNameDef().getType() == Type.IMAGE) {
 			if (declaration.getNameDef() instanceof NameDefWithDim)
 				check(declaration.getNameDef().getDim() != null, declaration, "no dimension? :(");
-			else
+			else if (declaration.getOp() != null)
 				check(declaration.getExpr().getType() == Type.IMAGE || declaration.getExpr().getType() == Type.STRING, declaration, "reminder that image is close minded");
+			else
+				throw new TypeCheckException("image needs size validation :c");
 		}			
 
 		if (op == Kind.ASSIGN) {

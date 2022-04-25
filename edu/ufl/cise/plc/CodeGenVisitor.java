@@ -2,6 +2,8 @@ package edu.ufl.cise.plc;
 
 import java.util.List;
 
+import org.junit.platform.console.shadow.picocli.CommandLine.Spec.Target;
+
 import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.ASTNode;
 import edu.ufl.cise.plc.ast.ASTVisitor;
@@ -108,12 +110,16 @@ public class CodeGenVisitor implements ASTVisitor {
         if (consoleExpr.getCoerceTo() == Type.COLOR) {
             if (!imports.toString().contains("edu.ufl.cise.plc.runtime.ColorTuple;"))
                 imports.append("import edu.ufl.cise.plc.runtime.ColorTuple;\n");
-            sb.append("(ColorTuple)");
+            sb.append("new ColorTuple(");
         }
+        else if (consoleExpr.getCoerceTo() == Type.STRING)
+            sb.append("(String)");
         else
             sb.append("(" + consoleExpr.getCoerceTo().toString().toLowerCase() + ") ");
         sb.append("ConsoleIO.readValueFromConsole(\"" + consoleExpr.getCoerceTo().toString() + "\", \"Enter ");
         sb.append(consoleExpr.getCoerceTo().toString().toLowerCase() + ":\")");
+        if (consoleExpr.getCoerceTo() == Type.COLOR)
+            sb.append(")");
         return sb.toString();
     }
 
@@ -148,7 +154,7 @@ public class CodeGenVisitor implements ASTVisitor {
             if (unaryExpression.getExpr().getType() == Type.INT || unaryExpression.getExpr().getType() == Type.COLOR) {
                 sb.append("ColorTuple." + unaryExpression.getOp().getText() + "(");
                 unaryExpression.getExpr().visit(this, sb);
-                sb.append(");");
+                sb.append(")");
             }
             else if (unaryExpression.getExpr().getType() == Type.IMAGE) {
                 if (!imports.toString().contains("edu.ufl.cise.plc.runtime.ImageOps;"))
@@ -164,8 +170,12 @@ public class CodeGenVisitor implements ASTVisitor {
                 sb.append(")");
             }
         }
+        else if (unaryExpression.getOp().getKind() == Kind.IMAGE_OP) {
+            unaryExpression.getExpr().visit(this, sb);
+            sb.append("." + unaryExpression.getOp().getText() + "()");
+        }
         else {
-            sb.append("(" + unaryExpression.getOp().getText());
+            sb.append("(" + unaryExpression.getOp().getText() + " ");
             unaryExpression.getExpr().visit(this, sb);
             sb.append(")");
         }
@@ -225,7 +235,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 else if (binaryExpr.getCoerceTo() == Type.COLOR) {
                     if (!imports.toString().contains("edu.ufl.cise.plc.runtime.ColorTuple;"))
                         imports.append("import edu.ufl.cise.plc.runtime.ColorTuple;\n");
-                    sb.append("(ColorTuple)");
+                    sb.append("new ColorTuple(");
                 }
                 else
                     sb.append("(" + binaryExpr.getCoerceTo().toString().toLowerCase() + ")");
@@ -250,6 +260,8 @@ public class CodeGenVisitor implements ASTVisitor {
                 right.visit(this, sb);
             }
             sb.append(")");
+            if (binaryExpr.getCoerceTo() == Type.COLOR)
+                sb.append(")");
         }
         return sb.toString();
     }
@@ -261,7 +273,7 @@ public class CodeGenVisitor implements ASTVisitor {
             if (identExpr.getCoerceTo() == Type.STRING)
                 sb.append("(String)");
             else if (identExpr.getCoerceTo() == Type.COLOR)
-                sb.append("(Color)");
+                sb.append("");
             else if (identExpr.getCoerceTo() == Type.COLORFLOAT) {
                 if (!imports.toString().contains("edu.ufl.cise.plc.runtime.ColorTupleFloat;"))
                     imports.append("import edu.ufl.cise.plc.runtime.ColorTupleFloat;\n");
@@ -372,13 +384,19 @@ public class CodeGenVisitor implements ASTVisitor {
         StringBuilder sb = (StringBuilder) arg;
         if (!imports.toString().contains("edu.ufl.cise.plc.runtime.ConsoleIO;"))
             imports.append("import edu.ufl.cise.plc.runtime.ConsoleIO;\n");
-        if (writeStatement.getSource().getType() == Type.IMAGE) {
-            if (writeStatement.getDest().getType() == Type.CONSOLE)
-                sb.append("ConsoleIO.displayImageOnScreen(" + writeStatement.getSource().getText() + ");\n");
-            else if (writeStatement.getDest().getType() == Type.IMAGE)
+        if (writeStatement.getSource().getType() == Type.IMAGE && writeStatement.getDest().getType() == Type.CONSOLE)
+            sb.append("ConsoleIO.displayImageOnScreen(" + writeStatement.getSource().getText() + ");\n");
+        if (writeStatement.getDest().getType() == Type.STRING) {
+            if (writeStatement.getSource().getType() == Type.IMAGE) {
+                if (!imports.toString().contains("edu.ufl.cise.plc.runtime.FileURLIO;"))
+                    imports.append("import edu.ufl.cise.plc.runtime.FileURLIO;\n");
                 sb.append("FileURLIO.writeImage(" + writeStatement.getSource().getText() + ", " + writeStatement.getDest().getText() + ");\n");
-            else
+            }
+            else {
+                if (!imports.toString().contains("edu.ufl.cise.plc.runtime.FileURLIO;"))
+                    imports.append("import edu.ufl.cise.plc.runtime.FileURLIO;\n");
                 sb.append("FileURLIO.writeValue(" + writeStatement.getSource().getText() + ", " + writeStatement.getDest().getText() + ");\n");
+            }
         }
         else {
             sb.append("ConsoleIO.console.println(");
@@ -391,18 +409,31 @@ public class CodeGenVisitor implements ASTVisitor {
     @Override
     public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
         StringBuilder sb = (StringBuilder) arg;
-        if (readStatement.getTargetDec().getType() == Type.IMAGE && !imports.toString().contains("edu.ufl.cise.plc.runtime.FileURLIO;"))
+        if (!imports.toString().contains("edu.ufl.cise.plc.runtime.FileURLIO;"))
             imports.append("import edu.ufl.cise.plc.runtime.FileURLIO;\n");
         if (readStatement.getTargetDec().getType() == Type.IMAGE) {
             if (!imports.toString().contains("java.awt.image.BufferedImage;"))
                 imports.append("import java.awt.image.BufferedImage;\n");
-            sb.append("BufferedImage " + readStatement.getName() + " = " + "FileURLIO.readImage(");
+            if (!readStatement.getTargetDec().isInitialized())
+                sb.append("BufferedImage ");
+            sb.append(readStatement.getName() + " = FileURLIO.readImage(");
             readStatement.getSource().visit(this, sb);
             sb.append(")");
         }
         else {
             sb.append(readStatement.getName() + " = ");
+            if (readStatement.getSource().getType() == Type.STRING) {
+                if (readStatement.getTargetDec().getType() == Type.STRING)
+                    sb.append("(String)");
+                else if (readStatement.getTargetDec().getType() == Type.COLOR)
+                    sb.append("(ColorTuple)");
+                else
+                    sb.append("(" + readStatement.getTargetDec().getType().toString().toLowerCase() + ")");
+                sb.append("FileURLIO.readValueFromFile(");
+            }
             readStatement.getSource().visit(this, sb);
+            if (readStatement.getSource().getType() == Type.STRING)
+                sb.append(")");
         }
         sb.append(";\n");
         return sb.toString();
@@ -531,6 +562,11 @@ public class CodeGenVisitor implements ASTVisitor {
                     sb.append(" = FileURLIO.readImage(");
                 else
                     sb.append(" = ");
+                if (nameDef instanceof NameDefWithDim && declaration.getExpr().getType() == Type.IMAGE) {
+                    if (!imports.toString().contains("edu.ufl.cise.plc.runtime.ImageOps;"))
+                        imports.append("import edu.ufl.cise.plc.runtime.ImageOps;\n");
+                    sb.append("ImageOps.resize(");
+                }
                 declaration.getExpr().visit(this, sb);
                 if (nameDef instanceof NameDefWithDim) {
                     NameDefWithDim nd = (NameDefWithDim)nameDef;
@@ -538,24 +574,53 @@ public class CodeGenVisitor implements ASTVisitor {
                     nd.getDim().visit(this, sb);
                     sb.append(")");
                 }
-                else if (!(declaration.getExpr() instanceof BinaryExpr) && !(declaration.getExpr() instanceof UnaryExpr))
-                    sb.append(");\n");
-                if (!(declaration.getExpr() instanceof BinaryExpr) && declaration.getExpr().getType() != Type.IMAGE)
+                //else if (!(declaration.getExpr() instanceof BinaryExpr) && !(declaration.getExpr() instanceof UnaryExpr))
+                    //sb.append(");\n");
+                if (!(declaration.getExpr() instanceof BinaryExpr) && declaration.getExpr().getType() != Type.IMAGE && !(nameDef instanceof NameDefWithDim))
+                    sb.append(");\nFileURLIO.closeFiles();\n");
+                else if (nameDef instanceof NameDefWithDim)
                     sb.append(";\nFileURLIO.closeFiles();\n");
                 else
                     sb.append(";\n");
             }
-            else if (nameDef.getType() == Type.COLOR) {
+            else if (nameDef.getType() == Type.COLOR && declaration.getOp().getKind() != Kind.LARROW) {
                 sb.append(" = ");
-                declaration.getExpr().visit(this, sb);
+                if (declaration.getExpr().getType() == Type.INT) {
+                    sb.append("ColorTuple.unpack(");
+                    declaration.getExpr().visit(this, sb);
+                    sb.append(")");
+                }
+                else
+                    declaration.getExpr().visit(this, sb);
                 sb.append(";\n");
             }
             else {
-                sb.append(" " + declaration.getOp().getText() + " ");
+                sb.append(" = ");
                 Expr expr = declaration.getExpr();
-                if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType())
-                    sb.append("(" + expr.getCoerceTo().toString().toLowerCase() + ")");
-                expr.visit(this, sb);
+                if (declaration.getOp().getKind() == Kind.LARROW && expr.getType() == Type.STRING) {
+                    if (nameDef.getType() == Type.STRING)
+                        sb.append("(String)");
+                    else if (nameDef.getType() == Type.COLOR)
+                        sb.append("(ColorTuple)");
+                    else
+                        sb.append("(" + nameDef.getType().toString().toLowerCase() + ")");
+                    sb.append("FileURLIO.readValueFromFile(");
+                }
+                if (expr.getType() == Type.COLOR && expr.getCoerceTo() == Type.INT) {
+                    expr.visit(this, sb);
+                    sb.append(".pack()");
+                }
+                else if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()) {
+                    if (expr.getCoerceTo() == Type.STRING)
+                        sb.append("(String)");
+                    else
+                        sb.append("(" + expr.getCoerceTo().toString().toLowerCase() + ")");
+                    expr.visit(this, sb);
+                }
+                else
+                    expr.visit(this, sb);
+                if (declaration.getOp().getKind() == Kind.LARROW && expr.getType() == Type.STRING)
+                    sb.append(")");
                 sb.append(";\n");
             }
         }
