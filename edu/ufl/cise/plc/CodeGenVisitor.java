@@ -418,6 +418,10 @@ public class CodeGenVisitor implements ASTVisitor {
                 sb.append("BufferedImage ");
             sb.append(readStatement.getName() + " = FileURLIO.readImage(");
             readStatement.getSource().visit(this, sb);
+            if (readStatement.getTargetDec().getDim() != null) {
+                sb.append(", ");
+                readStatement.getTargetDec().getDim().visit(this, sb);
+            }
             sb.append(")");
         }
         else {
