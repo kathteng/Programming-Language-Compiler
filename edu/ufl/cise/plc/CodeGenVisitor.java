@@ -590,7 +590,7 @@ public class CodeGenVisitor implements ASTVisitor {
             else if (nameDef.getType() == Type.COLOR && declaration.getOp().getKind() != Kind.LARROW) {
                 sb.append(" = ");
                 if (declaration.getExpr().getType() == Type.INT) {
-                    sb.append("ColorTuple.unpack(");
+                    sb.append("new ColorTuple(");
                     declaration.getExpr().visit(this, sb);
                     sb.append(")");
                 }
